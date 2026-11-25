@@ -134,7 +134,7 @@ pt.board = (el, k, o) => {
       const next = pt.el('button', '', '▶'); next.type = 'button'; next.disabled = ci === cols.length - 1; next.setAttribute('aria-label', ci < cols.length - 1 ? `Move to ${cols[ci + 1]}` : 'Move right');
       prev.addEventListener('click', () => pt.update(k, r.id, {[o.field]: cols[ci - 1]}));
       next.addEventListener('click', () => pt.update(k, r.id, {[o.field]: cols[ci + 1]}));
-      mv.append(prev, next); foot.append(mv); card.append(foot);
+      mv.append(prev, next); if (o.deletable) mv.append(pt.delBtn(k, r.id)); foot.append(mv); card.append(foot);
       card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', r.id); e.dataTransfer.effectAllowed = 'move'; card.classList.add('is-drag'); });
       card.addEventListener('dragend', () => card.classList.remove('is-drag'));
       c.append(card);

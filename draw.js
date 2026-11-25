@@ -80,7 +80,7 @@ const byDeadline = (a, b) => (a.deadline || '9999').localeCompare(b.deadline || 
 
 dash.draw('taskBoard', (el) => {
   pt.board(el, 'tasks', {
-    field: 'status', tone: 'status', limit: {Done: 6},
+    field: 'status', tone: 'status', limit: {Done: 6}, deletable: true,
     sort: (a, b) => a.status === 'Done' && b.status === 'Done' ? String(b.createdAt || '').localeCompare(String(a.createdAt || '')) : byDeadline(a, b),
     card: (r) => {
       const top = pt.el('div', 'pt-kcard-top'); top.append(pt.tag('priority', r.priority || 'Medium'));
