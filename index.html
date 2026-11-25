@@ -7,8 +7,8 @@
 <link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@400&display=swap">
-<link rel="stylesheet" href="base.css?v=7">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="base.css?v=8">
+<link rel="stylesheet" href="style.css?v=8">
 <script src="vendor/d3.min.js"></script>
 </head>
 <body>
@@ -167,14 +167,20 @@
 <button class='pt-btn' type='submit'>Save member</button>
 </form></details>
 <div class='pt-team' id='kartu-tim' data-draw='teamCards'></div>
-<div class='pt-card' id='partner-access' data-team-only hidden>
-<h2>🤝 Partner access</h2><p class='pt-sub'>Partners can only open the tracker after you add their Google email here. They enter their name the first time they sign in.</p>
-<form class='pt-form' id='accessForm' style='padding:12px 0'>
-<label>Partner's Google email<input type='email' name='email' required placeholder='name@agency.com'></label>
-<label>Agency<input name='agency' required placeholder='Agency name'></label>
-<button class='pt-btn' type='submit'>Give access</button>
+<div class='pt-card pt-admin' id='access' data-admin-only hidden>
+<h2>🔐 Access &amp; members</h2><p class='pt-sub'>Only you (admin) can see this. People who sign in without access can send a request; accept or reject it here, or add someone directly.</p>
+<h3 class='pt-h3'>Pending requests</h3>
+<ul class='pt-list' data-draw='requestList'></ul>
+<h3 class='pt-h3'>Add member</h3>
+<form class='pt-form' id='memberForm' style='padding:0'>
+<label>Google email<input type='email' name='email' required placeholder='name@gmail.com'></label>
+<label>Role<select name='role' class='dash-select'><option value='team'>PRCH team</option><option value='partner'>Partner</option><option value='admin'>Admin</option></select></label>
+<label>Name<input name='name' placeholder='Optional; they can fill it in'></label>
+<label data-agency>Agency<input name='agency' placeholder='Partner agency'></label>
+<button class='pt-btn' type='submit'>Add member</button>
 </form>
-<ul class='pt-list' data-draw='accessList'></ul>
+<h3 class='pt-h3'>Members</h3>
+<ul class='pt-list' data-draw='memberList'></ul>
 </div>
 </section>
 </div>
@@ -186,26 +192,35 @@
 <div><h2 id='whoTitle'>PRCH Team Tracker</h2><p class='pt-sub' id='gateMsg'></p></div>
 <div data-view='busy'><p class='pt-sub'>Loading…</p></div>
 <div data-view='signin' hidden><p class='pt-sub'>Sign in with your Google account. PRCH team members and invited partners only.</p><button type='button' class='pt-btn pt-google' id='gateSignIn'>Sign in with Google</button></div>
-<div data-view='partner' hidden>
-<p class='pt-sub'>Welcome! Tell us who you are. Your name is shown on every change you make.</p>
-<form id='whoPartner'>
-<input name='agency' required placeholder='Agency name' aria-label='Agency name'>
+<div data-view='profile' hidden>
+<form id='whoProfile'>
 <input name='name' required placeholder='Your name' aria-label='Your name'>
+<div data-agency hidden><input name='agency' placeholder='Agency name' aria-label='Agency name' style='width:100%'></div>
 <button class='pt-btn' type='submit'>Continue</button>
 </form>
 <button type='button' class='pt-linkbtn' data-signout>Use another account</button>
 </div>
+<div data-view='request' hidden>
+<form id='whoRequest'>
+<label class='pt-sub'>I am<select name='role' class='dash-select' style='width:100%;margin-top:4px'><option value='team'>PRCH team member</option><option value='partner'>Partner from another agency</option></select></label>
+<input name='name' required placeholder='Your name' aria-label='Your name'>
+<div data-agency hidden><input name='agency' placeholder='Agency name' aria-label='Agency name' style='width:100%'></div>
+<button class='pt-btn' type='submit'>Request access</button>
+</form>
+<button type='button' class='pt-linkbtn' data-signout>Use another account</button>
+</div>
+<div data-view='pending' hidden><button type='button' class='pt-btn' onclick='location.reload()'>Check again</button><button type='button' class='pt-linkbtn' data-signout>Use another account</button></div>
 <div data-view='denied' hidden><button type='button' class='pt-btn' data-signout>Sign in with another account</button></div>
 <div data-view='error' hidden><button type='button' class='pt-btn' onclick='location.reload()'>Reload</button></div>
 </div>
 </div>
-<script src="firebase-config.js?v=7"></script>
-<script type="module" src="fb.js?v=7"></script>
-<script src="dash-shim.js?v=7"></script>
-<script src="core.js?v=7"></script>
-<script src="draw.js?v=7"></script>
-<script src="mom.js?v=7"></script>
-<script src="ui.js?v=7"></script>
+<script src="firebase-config.js?v=8"></script>
+<script type="module" src="fb.js?v=8"></script>
+<script src="dash-shim.js?v=8"></script>
+<script src="core.js?v=8"></script>
+<script src="draw.js?v=8"></script>
+<script src="mom.js?v=8"></script>
+<script src="ui.js?v=8"></script>
 <script>dash.__start();</script>
 </body>
 </html>

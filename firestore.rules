@@ -4,27 +4,32 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null && request.auth.token.email_verified == true; }
     function email() { return request.auth.token.email.lower(); }
-    // Core team: keep in sync with `team` in firebase-config.js
-    function isTeam() {
-      return signedIn() && email() in [
-        'SADAD_EMAIL', 'AJI_EMAIL', 'OJI_EMAIL'
-      ];
-    }
-    // Partners: a team member adds access/{email} from Team → Partner access
-    function isPartner() { return signedIn() && exists(/databases/$(database)/documents/access/$(email())); }
+    // Owner: always admin. Keep in sync with `admin` in firebase-config.js
+    function isOwner() { return signedIn() && email() == 'sadadrasyad2@gmail.com'; }
+    function memberPath() { return /databases/$(database)/documents/members/$(email()); }
+    function isMember() { return signedIn() && exists(memberPath()); }
+    function isAdmin() { return isOwner() || (isMember() && get(memberPath()).data.role == 'admin'); }
 
-    // Tracker data: tasks, pipeline, MoM, meetings, collaterals, team, activity
+    // Tracker data: tasks, pipeline, MoM, meetings, collaterals, team list, activity
     match /data/prch/{col}/{id} {
-      allow read, write: if isTeam() || isPartner();
+      allow read, write: if isOwner() || isMember();
     }
 
-    // Partner access list
-    match /access/{em} {
-      allow read: if isTeam() || (signedIn() && em == email());
-      allow create, delete: if isTeam();
-      allow update: if isTeam()
+    // Who has access, and their role (admin / team / partner)
+    match /members/{em} {
+      allow read: if isAdmin() || (signedIn() && em == email());
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
         || (signedIn() && em == email()
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'agency']));
+    }
+
+    // Access requests from people who signed in without access
+    match /requests/{em} {
+      allow read, delete: if isAdmin() || (signedIn() && em == email());
+      allow create: if signedIn() && em == email()
+        && request.resource.data.keys().hasOnly(['email', 'name', 'agency', 'role', 'at'])
+        && request.resource.data.role in ['team', 'partner'];
     }
   }
 }

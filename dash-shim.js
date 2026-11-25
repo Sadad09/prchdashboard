@@ -8,7 +8,7 @@
  */
 (() => {
   const CFG = window.PRCH_CONFIG || {firebase: {}, team: {}};
-  const TEAM = Object.fromEntries(Object.entries(CFG.team || {}).map(([k, v]) => [k.toLowerCase(), v]));
+  const OWNER = String(CFG.admin || '').toLowerCase();
   const DATASETS = {
     tasks: 'data/prch/tasks',
     team: 'data/prch/team',
@@ -25,13 +25,14 @@
   const state = {};   // col -> 'loading' | 'ok' | 'error'
   const errors = {};
   let fb = null;      // window.fbApi once loaded
-  let me = null;      // {type: 'team'|'partner', name, agency?, email}
+  let me = null;      // {type: 'admin'|'team'|'partner', name, agency?, email}
   const unsubs = [];
 
   const splitPath = (path) => { const i = path.lastIndexOf('/'); return [path.slice(0, i), path.slice(i + 1)]; };
   const label = (u) => (!u ? 'Unknown' : u.type === 'partner' ? `${u.name} (${u.agency})` : u.name);
-  const isTeam = () => !!me && me.type === 'team';
-  window.ptWho = {get: () => me, label, isTeam};
+  const isAdmin = () => !!me && me.type === 'admin';
+  const isTeam = () => !!me && (me.type === 'team' || me.type === 'admin');
+  window.ptWho = {get: () => me, label, isTeam, isAdmin};
 
   const listen = (col, q) => {
     state[col] = 'loading';
@@ -46,7 +47,7 @@
       if (col === DATASETS.activity) listen(col, fb.query(fb.collection(fb.db, col), fb.orderBy('at', 'desc'), fb.limit(60)));
       else listen(col);
     });
-    if (isTeam()) listen('access');
+    if (isAdmin()) { listen('members'); listen('requests'); }
   };
   const stopSync = () => { unsubs.splice(0).forEach((u) => { try { u(); } catch (e) { /* ignore */ } }); };
 
@@ -182,81 +183,167 @@
     if (msg != null && $('gateMsg')) $('gateMsg').textContent = msg;
   }
   const showBadge = () => {
-    if ($('whoBadge')) $('whoBadge').textContent = me ? label(me) : '—';
-    document.querySelectorAll('[data-team-only]').forEach((el) => { el.hidden = !isTeam(); });
+    if ($('whoBadge')) $('whoBadge').textContent = me ? `${label(me)}${isAdmin() ? ' · admin' : ''}` : '—';
+    document.querySelectorAll('[data-admin-only]').forEach((el) => { el.hidden = !isAdmin(); });
   };
+  const errText = (e) => (e && (e.code || e.message)) || 'unknown error';
+  const memberRef = (em) => fb.doc(fb.db, `members/${em}`);
+  const requestRef = (em) => fb.doc(fb.db, `requests/${em}`);
+  let authUser = null;
 
   function boot() {
     fb = window.fbApi;
     $('gateSignIn') && $('gateSignIn').addEventListener('click', async () => {
       gate('busy');
       try { await fb.signInWithPopup(fb.auth, new fb.GoogleAuthProvider()); }
-      catch (e) { gate('signin', e && e.code === 'auth/popup-closed-by-user' ? '' : `Sign-in failed: ${e.code || e.message}`); }
+      catch (e) { gate('signin', e && e.code === 'auth/popup-closed-by-user' ? '' : `Sign-in failed: ${errText(e)}`); }
     });
     document.querySelectorAll('[data-signout]').forEach((b) => b.addEventListener('click', () => fb.signOut(fb.auth)));
-    const pf = $('whoPartner');
+
+    // first sign-in of an accepted member: fill in name (and agency for partners)
+    const pf = $('whoProfile');
     if (pf) pf.addEventListener('submit', async (e) => {
-      e.preventDefault();
+      e.preventDefault(); if (!me) return;
       const name = pf.elements.name.value.trim(); const agency = pf.elements.agency.value.trim();
-      if (!name || !agency || !me) return;
+      if (!name || (me.type === 'partner' && !agency)) return;
       try {
-        await fb.updateDoc(fb.doc(fb.db, `access/${me.email}`), {name, agency});
-        me = {...me, name, agency}; enter();
-      } catch (err) { gate('partner', `Could not save: ${err.code || err.message}`); }
+        const patch = me.type === 'partner' ? {name, agency} : {name};
+        await fb.updateDoc(memberRef(me.email), patch); me = {...me, ...patch}; enter();
+      } catch (err) { gate('profile', `Could not save: ${errText(err)}`); }
     });
+
+    // not a member yet: ask the admin for access
+    const rf = $('whoRequest');
+    if (rf) {
+      const sync = () => { rf.querySelector('[data-agency]').hidden = rf.elements.role.value !== 'partner'; };
+      rf.elements.role.addEventListener('change', sync);
+      sync();
+      rf.addEventListener('submit', async (e) => {
+        e.preventDefault(); if (!authUser) return;
+        const email = String(authUser.email || '').toLowerCase();
+        const role = rf.elements.role.value || 'team';
+        const name = rf.elements.name.value.trim(); const agency = role === 'partner' ? rf.elements.agency.value.trim() : '';
+        if (!name || (role === 'partner' && !agency)) return;
+        try {
+          await fb.setDoc(requestRef(email), {email, name, agency, role, at: new Date().toISOString()});
+          gate('pending', `Request sent as ${role === 'partner' ? `${name} (${agency})` : name}. You'll get in once the admin accepts it. Reload this page later.`);
+        } catch (err) { gate('request', `Could not send the request: ${errText(err)}`); }
+      });
+    }
 
     gate('busy');
     fb.onAuthStateChanged(fb.auth, async (user) => {
+      authUser = user;
       stopSync(); me = null; Object.keys(cache).forEach((k) => delete cache[k]); Object.keys(state).forEach((k) => delete state[k]);
       showBadge(); changed();
       if (!user) { gate('signin', ''); return; }
       const email = String(user.email || '').toLowerCase();
-      if (TEAM[email]) { me = {type: 'team', name: TEAM[email], email}; enter(); return; }
       try {
-        const snap = await fb.getDoc(fb.doc(fb.db, `access/${email}`));
-        if (!snap.exists()) { gate('denied', `${email} doesn't have access yet. Ask the PRCH team to add you under Team → Partner access.`); return; }
-        const a = snap.data();
-        me = {type: 'partner', name: a.name || '', agency: a.agency || '', email};
-        if (!a.name || !a.agency) {
-          const pf2 = $('whoPartner'); if (pf2) { pf2.elements.agency.value = a.agency || ''; pf2.elements.name.value = a.name || (user.displayName || ''); }
-          gate('partner', ''); return;
+        let snap = await fb.getDoc(memberRef(email));
+        if (!snap.exists() && email === OWNER) {
+          await fb.setDoc(memberRef(email), {role: 'admin', name: CFG.adminName || user.displayName || 'Admin', agency: '', addedBy: 'setup', addedAt: new Date().toISOString()});
+          snap = await fb.getDoc(memberRef(email));
+          me = {type: 'admin', name: snap.data().name, agency: '', email};
+          addToPicList(snap.data().name).catch(() => {});
         }
-        enter();
-      } catch (e) { gate('denied', `${email} doesn't have access yet. Ask the PRCH team to add you under Team → Partner access.`); }
+        if (snap.exists()) {
+          const m = snap.data();
+          const type = email === OWNER ? 'admin' : (m.role || 'team');
+          me = {type, name: m.name || '', agency: m.agency || '', email};
+          if (!me.name || (type === 'partner' && !me.agency)) {
+            pf.elements.name.value = me.name || user.displayName || ''; pf.elements.agency.value = me.agency || '';
+            pf.querySelector('[data-agency]').hidden = type !== 'partner';
+            gate('profile', `Welcome! You were added as ${type === 'partner' ? 'a partner' : 'a team member'}. Confirm your details.`); return;
+          }
+          enter(); return;
+        }
+        // not a member: show request form, or "pending" if already requested
+        const req = await fb.getDoc(requestRef(email)).catch(() => null);
+        if (req && req.exists()) { gate('pending', `${email}: your access request is waiting for the admin. Reload this page later.`); return; }
+        if (rf) { rf.reset(); rf.elements.name.value = user.displayName || ''; rf.elements.role.dispatchEvent(new Event('change')); }
+        gate('request', `${email} doesn't have access yet. Send a request to the admin.`);
+      } catch (e) { gate('error', `Could not check your access: ${errText(e)}`); }
     });
   }
   function enter() { gate('none'); showBadge(); startSync(); changed(); }
 
-  // ---------- partner access (team only) ----------
+  // ---------- admin: requests + members ----------
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const ROLE_LABEL = {admin: 'Admin', team: 'PRCH team', partner: 'Partner'};
+  const addToPicList = async (name) => {
+    if (!name) return;
+    const exists = Object.values(cache[DATASETS.team] || {}).some((r) => String(r.name || '').toLowerCase() === name.toLowerCase());
+    if (!exists) await db.collection(DATASETS.team).add({name, role: ''});
+  };
   function setupAccessUI() {
-    const f = $('accessForm');
-    if (f) f.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = f.elements.email.value.trim().toLowerCase(); const agency = f.elements.agency.value.trim();
-      if (!email || !agency || !isTeam()) return;
-      try { await fb.setDoc(fb.doc(fb.db, `access/${email}`), {agency, name: '', addedBy: label(me), addedAt: new Date().toISOString()}); f.reset(); }
-      catch (err) { alert(`Could not add partner: ${err.code || err.message}`); }
-    });
-    draws.set('accessList', (el) => {
-      if (!isTeam()) { el.replaceChildren(); return; }
-      const rows = Object.entries(cache.access || {}).sort((a, b) => a[0].localeCompare(b[0]));
-      const li = (text) => { const x = document.createElement('li'); x.className = 'pt-empty'; x.textContent = text; return x; };
-      if (state.access === 'error') { el.replaceChildren(li('Could not load partner access. Check the Firestore rules.')); return; }
-      if (!rows.length) { el.replaceChildren(li('No partners yet.')); return; }
-      el.replaceChildren(...rows.map(([email, a]) => {
-        const x = document.createElement('li'); x.className = 'pt-li';
-        const body = document.createElement('div'); body.className = 'pt-li-body';
-        const t = document.createElement('span'); t.className = 'pt-li-title'; t.textContent = a.name ? `${a.name} (${a.agency})` : a.agency;
-        const m = document.createElement('span'); m.className = 'pt-meta'; m.textContent = `${email}${a.name ? '' : ' · has not signed in yet'}`;
-        body.append(t, m);
-        const b = document.createElement('button'); b.type = 'button'; b.className = 'pt-del'; b.textContent = 'Remove';
-        let armed = null;
-        b.addEventListener('click', async () => {
-          if (!armed) { b.textContent = 'Sure?'; b.classList.add('is-armed'); armed = setTimeout(() => { armed = null; b.textContent = 'Remove'; b.classList.remove('is-armed'); }, 3000); return; }
-          clearTimeout(armed); b.disabled = true;
-          try { await fb.deleteDoc(fb.doc(fb.db, `access/${email}`)); } catch (err) { b.disabled = false; alert(`Could not remove: ${err.code || err.message}`); }
+    const f = $('memberForm');
+    if (f) {
+      const sync = () => { f.querySelector('[data-agency]').hidden = f.elements.role.value !== 'partner'; };
+      f.elements.role.addEventListener('change', sync); sync();
+      f.addEventListener('submit', async (e) => {
+        e.preventDefault(); if (!isAdmin()) return;
+        const email = f.elements.email.value.trim().toLowerCase(); const role = f.elements.role.value;
+        const name = f.elements.name.value.trim(); const agency = role === 'partner' ? f.elements.agency.value.trim() : '';
+        if (!email || (role === 'partner' && !agency)) return;
+        try {
+          await fb.setDoc(memberRef(email), {role, name, agency, addedBy: label(me), addedAt: new Date().toISOString()});
+          if (role !== 'partner') await addToPicList(name);
+          f.reset(); sync();
+        } catch (err) { alert(`Could not add member: ${errText(err)}`); }
+      });
+    }
+    draws.set('requestList', (el) => {
+      if (!isAdmin()) { el.replaceChildren(); return; }
+      const rows = Object.entries(cache.requests || {}).sort((a, b) => String(a[1].at).localeCompare(String(b[1].at)));
+      if (state.requests === 'error') { el.replaceChildren(mk('li', 'pt-empty', 'Could not load requests. Check the Firestore rules.')); return; }
+      if (!rows.length) { el.replaceChildren(mk('li', 'pt-empty', 'No pending requests.')); return; }
+      el.replaceChildren(...rows.map(([email, r]) => {
+        const li = mk('li', 'pt-li'); const body = mk('div', 'pt-li-body');
+        body.append(mk('span', 'pt-li-title', r.role === 'partner' ? `${r.name} (${r.agency})` : r.name),
+          mk('span', 'pt-meta', `${email} · wants to join as ${ROLE_LABEL[r.role] || r.role}`));
+        const acts = mk('div', 'pt-req-acts');
+        const accept = mk('button', 'pt-btn', 'Accept'); accept.type = 'button';
+        const reject = mk('button', 'pt-del', 'Reject'); reject.type = 'button';
+        accept.addEventListener('click', async () => {
+          accept.disabled = reject.disabled = true;
+          try {
+            await fb.setDoc(memberRef(email), {role: r.role === 'partner' ? 'partner' : 'team', name: r.name || '', agency: r.agency || '', addedBy: label(me), addedAt: new Date().toISOString()});
+            await fb.deleteDoc(requestRef(email));
+            if (r.role !== 'partner') await addToPicList(r.name);
+          } catch (err) { accept.disabled = reject.disabled = false; alert(`Could not accept: ${errText(err)}`); }
         });
-        x.append(body, b); return x;
+        reject.addEventListener('click', async () => {
+          if (!reject.classList.contains('is-armed')) { reject.classList.add('is-armed'); reject.textContent = 'Sure?'; setTimeout(() => { reject.classList.remove('is-armed'); reject.textContent = 'Reject'; }, 3000); return; }
+          reject.disabled = accept.disabled = true;
+          try { await fb.deleteDoc(requestRef(email)); } catch (err) { reject.disabled = accept.disabled = false; alert(`Could not reject: ${errText(err)}`); }
+        });
+        acts.append(accept, reject); li.append(body, acts); return li;
+      }));
+    });
+    draws.set('memberList', (el) => {
+      if (!isAdmin()) { el.replaceChildren(); return; }
+      if (state.members === 'error') { el.replaceChildren(mk('li', 'pt-empty', 'Could not load members. Check the Firestore rules.')); return; }
+      const rows = Object.entries(cache.members || {}).sort((a, b) => (a[1].role || '').localeCompare(b[1].role || '') || a[0].localeCompare(b[0]));
+      if (!rows.length) { el.replaceChildren(mk('li', 'pt-empty', 'No members yet.')); return; }
+      el.replaceChildren(...rows.map(([email, m]) => {
+        const li = mk('li', 'pt-li'); const body = mk('div', 'pt-li-body');
+        const nm = m.name ? (m.role === 'partner' ? `${m.name} (${m.agency})` : m.name) : (m.role === 'partner' ? `(${m.agency})` : '(name not set yet)');
+        body.append(mk('span', 'pt-li-title', nm), mk('span', 'pt-meta', `${email}${m.name ? '' : ' · has not signed in yet'}`));
+        li.append(body);
+        if (email === OWNER) { li.append(mk('span', 'pt-badge', 'Owner · admin')); return li; }
+        const sel = mk('select', 'dash-select'); sel.setAttribute('aria-label', `Role of ${email}`);
+        ['admin', 'team', 'partner'].forEach((r) => sel.add(new Option(ROLE_LABEL[r], r)));
+        sel.value = m.role || 'team';
+        sel.addEventListener('change', async () => {
+          try { await fb.updateDoc(memberRef(email), {role: sel.value}); } catch (err) { alert(`Could not change role: ${errText(err)}`); }
+        });
+        const rm = mk('button', 'pt-del', 'Remove'); rm.type = 'button';
+        rm.addEventListener('click', async () => {
+          if (!rm.classList.contains('is-armed')) { rm.classList.add('is-armed'); rm.textContent = 'Sure?'; setTimeout(() => { rm.classList.remove('is-armed'); rm.textContent = 'Remove'; }, 3000); return; }
+          rm.disabled = true;
+          try { await fb.deleteDoc(memberRef(email)); } catch (err) { rm.disabled = false; alert(`Could not remove: ${errText(err)}`); }
+        });
+        li.append(sel, rm); return li;
       }));
     });
   }

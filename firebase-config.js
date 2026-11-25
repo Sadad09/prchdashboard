@@ -10,11 +10,8 @@ window.PRCH_CONFIG = {
     appId: '1:228203827617:web:c950ffefa89f5d89373be0',
     measurementId: 'G-XRPCNLC5XH'
   },
-  // Core team: Google email (lowercase) -> display name.
-  // Keep this list in sync with isTeam() in firestore.rules.
-  team: {
-    // 'sadad@example.com': 'Sadad',
-    // 'aji@example.com': 'Aji',
-    // 'oji@example.com': 'Mas Oji'
-  }
+  // Owner/admin. Keep in sync with isOwner() in firestore.rules.
+  // Other admins, team members and partners are managed in the app (Team tab → Access & members).
+  admin: 'sadadrasyad2@gmail.com',
+  adminName: 'Sadad'
 };

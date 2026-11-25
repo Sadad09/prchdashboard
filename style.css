@@ -180,3 +180,9 @@
 .pt-gate [data-view][hidden]{display:none}
 .pt-google{padding:12px!important}
 .pt-card[hidden]{display:none}
+.pt-h3{font-size:var(--cds-font-size-caption);text-transform:uppercase;letter-spacing:.06em;color:var(--color-fg-muted);margin:var(--cds-gap-md) 0 0;font-weight:var(--cds-font-weight-medium)}
+.pt-admin{display:flex;flex-direction:column;gap:var(--cds-gap-sm)}
+.pt-req-acts{display:flex;gap:6px;align-items:center}
+.pt-admin .pt-li .dash-select{max-width:140px}
+.pt-gate label{display:flex;flex-direction:column}
+.pt-gate [data-agency][hidden],.pt-form [data-agency][hidden]{display:none}
