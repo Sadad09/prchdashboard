@@ -15,7 +15,8 @@
     team: 'data/prch/team',
     pipeline: 'data/prch/pipeline',
     collaterals: 'data/prch/collaterals',
-    mom: 'data/prch/mom'
+    mom: 'data/prch/mom',
+    activity: 'data/prch/activity'
   };
 
   // ---------- storage ----------
@@ -28,18 +29,64 @@
   const splitPath = (path) => { const i = path.lastIndexOf('/'); return [path.slice(0, i), path.slice(i + 1)]; };
   const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
+  // ---------- who is using the page ----------
+  // Not a password login: it only labels who made each change.
+  const WHO_KEY = PREFIX + 'user';
+  const TEAM = ['Aji', 'Mas Oji', 'Sadad'];
+  const who = {
+    get() { try { return JSON.parse(localStorage.getItem(WHO_KEY) || 'null'); } catch (e) { return null; } },
+    set(u) { localStorage.setItem(WHO_KEY, JSON.stringify(u)); },
+    clear() { localStorage.removeItem(WHO_KEY); },
+    label(u) { if (!u) return 'Unknown'; return u.type === 'partner' ? `${u.name} (${u.agency})` : u.name; }
+  };
+  window.ptWho = who;
+
+  const KIND = {'data/prch/tasks': 'task', 'data/prch/team': 'team member', 'data/prch/pipeline': 'prospect',
+    'data/prch/collaterals': 'document', 'data/prch/mom': 'MoM'};
+  const titleOf = (r) => (r && (r.title || r.name || r.client)) || '(untitled)';
+  const LABELS = {status: 'status', stage: 'stage', priority: 'priority', owner: 'PIC', pic: 'PIC', deadline: 'deadline',
+    value: 'value', engagement: 'engagement', notes: 'notes', contract: 'PRCH role'};
+  const logActivity = (col, action, row, detail) => {
+    if (!KIND[col]) return;
+    const log = store.read(DATASETS.activity);
+    log[newId()] = {at: new Date().toISOString(), by: who.label(who.get()), action, kind: KIND[col], title: titleOf(row), detail: detail || ''};
+    const ids = Object.keys(log).sort((a, b) => String(log[b].at).localeCompare(String(log[a].at)));
+    ids.slice(300).forEach((k) => { delete log[k]; }); // keep the newest 300
+    store.write(DATASETS.activity, log);
+  };
+  const stamp = () => ({updatedBy: who.label(who.get()), updatedAt: new Date().toISOString()});
+
   const db = {
     collection(col) {
       return {
-        async add(data) { const all = store.read(col); const id = newId(); all[id] = {...data}; store.write(col, all); changed(); return {id}; }
+        async add(data) {
+          const all = store.read(col); const id = newId(); const s = stamp();
+          all[id] = {...data, createdBy: s.updatedBy, ...s}; store.write(col, all);
+          logActivity(col, 'added', all[id]); changed(); return {id};
+        }
       };
     },
     doc(path) {
       const [col, id] = splitPath(path);
       return {
-        async set(data) { const all = store.read(col); all[id] = {...data}; store.write(col, all); changed(); },
-        async update(patch) { const all = store.read(col); all[id] = {...(all[id] || {}), ...patch}; store.write(col, all); changed(); },
-        async delete() { const all = store.read(col); delete all[id]; store.write(col, all); changed(); }
+        async set(data) {
+          const all = store.read(col); const s = stamp(); const isNew = !all[id];
+          all[id] = {...data, ...(isNew ? {createdBy: s.updatedBy} : {}), ...s}; store.write(col, all);
+          logActivity(col, isNew ? 'added' : 'updated', all[id]); changed();
+        },
+        async update(patch) {
+          const all = store.read(col); const before = all[id] || {};
+          all[id] = {...before, ...patch, ...stamp()}; store.write(col, all);
+          const detail = Object.keys(patch).filter((k) => before[k] !== patch[k]).map((k) => {
+            const lab = LABELS[k] || k; const v = patch[k];
+            return (typeof v === 'string' && v.length < 40) ? `${lab} → ${v}` : lab;
+          }).join(', ');
+          logActivity(col, 'updated', all[id], detail); changed();
+        },
+        async delete() {
+          const all = store.read(col); const before = all[id]; delete all[id]; store.write(col, all);
+          logActivity(col, 'deleted', before); changed();
+        }
       };
     }
   };
@@ -104,8 +151,31 @@
       // keep tabs in sync when another tab of the same browser edits data
       window.addEventListener('storage', (e) => { if (e.key && e.key.startsWith(PREFIX)) changed(); });
       setupDataTools();
+      setupWho();
     }
   };
+
+  // ---------- identity screen ----------
+  function setupWho() {
+    const gate = document.getElementById('whoGate');
+    const badge = document.getElementById('whoBadge');
+    if (!gate) return;
+    const showBadge = () => { const u = who.get(); if (badge) badge.textContent = u ? who.label(u) : '—'; };
+    const open = () => { gate.hidden = false; const f = gate.querySelector('button'); if (f) f.focus(); };
+    const close = () => { gate.hidden = true; showBadge(); changed(); };
+    gate.querySelectorAll('[data-who]').forEach((b) => b.addEventListener('click', () => { who.set({type: 'team', name: b.dataset.who}); close(); }));
+    const pf = document.getElementById('whoPartner');
+    if (pf) pf.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = pf.elements.name.value.trim(); const agency = pf.elements.agency.value.trim();
+      if (!name || !agency) return;
+      who.set({type: 'partner', name, agency}); pf.reset(); close();
+    });
+    const sw = document.getElementById('whoSwitch');
+    if (sw) sw.addEventListener('click', open);
+    showBadge();
+    if (!who.get()) open();
+  }
 
   // ---------- backup / restore ----------
   function setupDataTools() {

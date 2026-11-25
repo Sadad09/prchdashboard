@@ -69,6 +69,13 @@ pt.delBtn = (k, id) => {
   });
   return b;
 };
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+pt.when = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso); if (isNaN(d)) return '';
+  return `${d.getDate()} ${MON[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+pt.byline = (r) => r && r.updatedBy ? pt.el('span', 'pt-meta pt-by', `Changes made by ${r.updatedBy} · ${pt.when(r.updatedAt)}`) : null;
 pt.deadlineBadge = (r) => {
   if (!r.deadline) return null;
   const today = pt.today();
@@ -105,6 +112,7 @@ pt.table = (el, k, cols, opts) => {
       if (cls) td.className = cls;
       tr.append(td);
     });
+    const by = pt.byline(r); if (by && tr.firstChild) tr.firstChild.append(by);
     const td = document.createElement('td'); td.append(pt.delBtn(k, r.id)); tr.append(td);
     return tr;
   }));
@@ -130,6 +138,7 @@ pt.board = (el, k, o) => {
     shown.forEach((r) => {
       const card = pt.el('div', 'pt-kcard'); card.draggable = true;
       card.append(...o.card(r).filter(Boolean));
+      const by = pt.byline(r); if (by) card.append(by);
       const foot = pt.el('div', 'pt-kcard-foot'); foot.append(o.foot ? o.foot(r) : pt.el('span'));
       const mv = pt.el('div', 'pt-move');
       const prev = pt.el('button', '', '◀'); prev.type = 'button'; prev.disabled = ci === 0; prev.setAttribute('aria-label', ci > 0 ? `Move to ${cols[ci - 1]}` : 'Move left');

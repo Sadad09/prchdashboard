@@ -170,8 +170,26 @@ dash.draw('teamCards', (el) => {
       s.append(v, pt.el('span', 'pt-stat-lab', lab)); stats.append(s);
     });
     const foot = pt.el('div', 'pt-member-foot'); foot.append(pt.delBtn('team', m.id));
+    const by = pt.byline(m); if (by) top.after(by);
     card.append(top, stats, foot);
     return card;
   }));
 });
 })();
+
+dash.draw('activity', (el) => {
+  const a = dash.data('activity');
+  const msg = (text) => { el.replaceChildren(pt.el('li', 'pt-empty', text)); };
+  if (a.status !== 'ok') return msg('—');
+  const rows = a.data.slice().sort((x, y) => String(y.at).localeCompare(String(x.at))).slice(0, 8);
+  if (!rows.length) return msg('No changes yet.');
+  const ICON = {added: '＋', updated: '✎', deleted: '✕'};
+  el.replaceChildren(...rows.map((r) => {
+    const li = pt.el('li', 'pt-li');
+    const body = pt.el('div', 'pt-li-body');
+    const line = pt.el('span', 'pt-li-title', `${r.by} ${r.action} ${r.kind} “${r.title}”`);
+    body.append(line, pt.el('span', 'pt-meta', [r.detail, pt.when(r.at)].filter(Boolean).join(' · ')));
+    li.append(pt.el('span', `pt-act is-${r.action}`, ICON[r.action] || '•'), body);
+    return li;
+  }));
+});

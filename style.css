@@ -151,3 +151,24 @@
 .pt-mom-bar .pt-del{margin-left:auto}
 @media (max-width:560px){.pt-mom-sum{grid-template-columns:auto minmax(0,1fr)}.pt-mom-prog{grid-column:1 / -1}.pt-ai-row{grid-template-columns:1fr}}
 @media print{.pt-tabs,.pt-add,.pt-del,.pt-seg,.pt-move,.pt-datatools{display:none}}
+
+.pt-by{font-size:11px;opacity:.85;margin-top:2px}
+.pt-act{width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px;flex:none;background:color-mix(in srgb,var(--color-fg) 8%,transparent)}
+.pt-act.is-added{background:color-mix(in srgb,var(--color-ok) 18%,transparent);color:var(--color-ok)}
+.pt-act.is-updated{background:color-mix(in srgb,var(--pt-c1) 16%,transparent);color:var(--pt-c1)}
+.pt-act.is-deleted{background:color-mix(in srgb,var(--color-bad) 14%,transparent);color:var(--color-bad)}
+.pt-whobar{display:flex;align-items:center;gap:8px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin-right:auto}
+.pt-whobar b{color:var(--color-fg)}
+.pt-gate{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px;background:color-mix(in srgb,#000 45%,transparent)}
+.pt-gate[hidden]{display:none}
+.pt-gate-box{width:min(460px,100%);background:var(--color-bg);border:1px solid var(--color-border-line);border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:16px}
+.pt-gate-box h2{font-family:var(--font-anthropic-serif);font-weight:400;font-size:26px;margin:0}
+.pt-gate-team{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pt-gate-team button,.pt-gate-box .pt-btn{font:inherit;cursor:pointer;border-radius:10px;padding:12px}
+.pt-gate-team button{background:var(--color-panel);border:1px solid var(--color-border-line);color:var(--color-fg);font-weight:600}
+.pt-gate-team button:hover{border-color:var(--pt-c1,#2F5BEA)}
+.pt-gate-or{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--color-fg-muted)}
+.pt-gate-or::before,.pt-gate-or::after{content:'';flex:1;height:1px;background:var(--color-border-line)}
+.pt-gate-box form{display:flex;flex-direction:column;gap:8px}
+.pt-gate-box input{font:inherit;color:var(--color-fg);background:var(--color-bg);border:1px solid var(--color-border-line);border-radius:8px;padding:10px}
+.pt-gate-box .pt-btn{background:var(--pt-c0,#0029A8);color:#fff;border:0;font-weight:600}

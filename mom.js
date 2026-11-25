@@ -107,6 +107,7 @@ dash.draw('momList', (el) => {
     pl.append(pt.el('span', 'pt-strong', String(done)), document.createTextNode(' / '), pt.el('span', 'pt-strong', String(acts.length)), document.createTextNode(' actions done'));
     const bar = pt.el('div', 'pt-bar'); const fill = pt.el('span'); fill.style.width = `${acts.length ? Math.round(done / acts.length * 100) : 0}%`; bar.append(fill);
     prog.append(pl, bar);
+    const mby = pt.byline(m); if (mby) main.append(mby);
     s.append(dt, main, prog);
     const body = pt.el('div', 'pt-mom-body');
     const grid = pt.el('div', 'pt-mom-grid');

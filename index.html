@@ -7,8 +7,8 @@
 <link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@400&display=swap">
-<link rel="stylesheet" href="base.css?v=4">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="base.css?v=5">
+<link rel="stylesheet" href="style.css?v=5">
 <script src="vendor/d3.min.js"></script>
 </head>
 <body>
@@ -33,6 +33,7 @@
 </nav>
 
 <div class='pt-datatools'>
+<span class='pt-whobar'>Logged in as <b id='whoBadge'>—</b> <button type='button' id='whoSwitch'>Switch</button></span>
 <span>Data is saved in this browser.</span>
 <button type='button' id='dataExport'>⬇ Export data</button>
 <label>⬆ Import data<input type='file' id='dataImport' accept='application/json,.json'></label>
@@ -53,6 +54,7 @@
 <div class='pt-card' id='workload'><h2>Team workload</h2><p class='pt-sub'>Open tasks per person. The red part is overdue.</p><div class='pt-chart' data-draw='workloadChart'></div></div>
 <div class='pt-card' id='deadline'><h2>Upcoming deadlines</h2><p class='pt-sub'>Active tasks that are overdue or due within 7 days.</p><ul class='pt-list' data-draw='upcoming'></ul></div>
 </div>
+<div class='pt-card' id='recent'><h2>Recent changes</h2><p class='pt-sub'>Who added, edited or deleted what, newest first.</p><ul class='pt-list' data-draw='activity'></ul></div>
 <div class='pt-card' id='pipeline-tahap'><h2>Pipeline by stage</h2><p class='pt-sub'>Number of clients and total project value at each stage.</p><div class='pt-chart' data-draw='pipeChart'></div></div>
 </section>
 
@@ -153,11 +155,24 @@
 </div>
 </div>
 
-<script src="dash-shim.js?v=4"></script>
-<script src="core.js?v=4"></script>
-<script src="draw.js?v=4"></script>
-<script src="mom.js?v=4"></script>
-<script src="ui.js?v=4"></script>
+<div class='pt-gate' id='whoGate' hidden role='dialog' aria-modal='true' aria-labelledby='whoTitle'>
+<div class='pt-gate-box'>
+<img src='logo.png' alt='Public Relations Clubhouse' style='height:44px;width:auto;align-self:flex-start'>
+<div><h2 id='whoTitle'>Who's using the tracker?</h2><p class='pt-sub'>Your name is shown on every change you make.</p></div>
+<div class='pt-gate-team'><button type='button' data-who='Aji'>Aji</button><button type='button' data-who='Mas Oji'>Mas Oji</button><button type='button' data-who='Sadad'>Sadad</button></div>
+<div class='pt-gate-or'>or, for partners</div>
+<form id='whoPartner'>
+<input name='agency' required placeholder='Agency name' aria-label='Agency name'>
+<input name='name' required placeholder='Your name' aria-label='Your name'>
+<button class='pt-btn' type='submit'>Continue as partner</button>
+</form>
+</div>
+</div>
+<script src="dash-shim.js?v=5"></script>
+<script src="core.js?v=5"></script>
+<script src="draw.js?v=5"></script>
+<script src="mom.js?v=5"></script>
+<script src="ui.js?v=5"></script>
 <script>dash.__start();</script>
 </body>
 </html>
