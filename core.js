@@ -10,11 +10,12 @@ pt.shortDate = (s) => { if (typeof s !== 'string' || s.length < 10) return '—'
 pt.rupiah = (v) => (v === '' || v == null || !isFinite(+v)) ? '—' : new Intl.NumberFormat('en-US', {style: 'currency', currency: 'IDR', maximumFractionDigits: 0}).format(+v);
 pt.rupiahShort = (v) => (v === '' || v == null || !isFinite(+v)) ? '—' : new Intl.NumberFormat('en-US', {style: 'currency', currency: 'IDR', notation: 'compact', maximumFractionDigits: 1}).format(+v);
 pt.TONES = {
-  status: [['To do', 'muted'], ['In progress', 'blue'], ['Review', 'warn'], ['Done', 'ok']],
+  status: [['Pending', 'pend'], ['To do', 'muted'], ['In progress', 'blue'], ['Review', 'warn'], ['Done', 'ok']],
   priority: [['High', 'bad'], ['Medium', 'warn'], ['Low', 'muted']],
   stage: [['Prospect', 'muted'], ['Pitching', 'blue'], ['Negotiation', 'warn'], ['Deal', 'ok'], ['Lost', 'bad']],
   collat: [['Draft', 'muted'], ['Review', 'warn'], ['Final', 'ok']],
   contract: [['Main con', 'blue'], ['Subcon', 'warn']],
+  engagement: [['Retainer', 'ok'], ['Project based', 'blue']],
   sentiment: [['Positif', 'ok'], ['Netral', 'muted'], ['Negatif', 'bad']],
   tier: [['Tier 1', 'blue'], ['Tier 2', 'muted'], ['Tier 3', 'muted']]
 };
@@ -124,6 +125,7 @@ pt.board = (el, k, o) => {
     const head = pt.el('div', 'pt-col-head'); const nm = pt.el('span', 'pt-col-name'); nm.append(pt.el('span', 'pt-dot'), pt.el('span', '', col));
     head.append(nm, pt.el('span', 'pt-count', String(all.length))); c.append(head);
     if (o.headExtra) c.append(pt.el('div', 'pt-col-extra', o.headExtra(all)));
+    if (o.hints && o.hints[col]) c.append(pt.el('div', 'pt-col-extra', o.hints[col]));
     if (!all.length) c.append(pt.el('div', 'pt-col-empty', o.emptyCol || 'Empty. Drag a card here.'));
     shown.forEach((r) => {
       const card = pt.el('div', 'pt-kcard'); card.draggable = true;

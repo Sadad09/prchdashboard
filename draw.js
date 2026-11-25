@@ -81,12 +81,14 @@ const byDeadline = (a, b) => (a.deadline || '9999').localeCompare(b.deadline || 
 dash.draw('taskBoard', (el) => {
   pt.board(el, 'tasks', {
     field: 'status', tone: 'status', limit: {Done: 6}, deletable: true,
+    hints: {Pending: 'Client opportunity waiting for our decision: take it or not.'},
     sort: (a, b) => a.status === 'Done' && b.status === 'Done' ? String(b.createdAt || '').localeCompare(String(a.createdAt || '')) : byDeadline(a, b),
     card: (r) => {
       const top = pt.el('div', 'pt-kcard-top'); top.append(pt.tag('priority', r.priority || 'Medium'));
+      if (r.engagement) top.append(pt.tag('engagement', r.engagement));
       const dl = pt.deadlineBadge(r); if (dl) top.append(dl);
       const title = pt.el('div', 'pt-kcard-title', r.title || '(untitled)');
-      return [top, title, r.client ? pt.el('span', 'pt-chip', r.client) : null, r.momId ? pt.el('span', 'pt-chip', `🗒️ ${r.momTitle || 'From MoM'}`) : null];
+      return [top, title, r.notes ? pt.el('span', 'pt-meta pt-note', r.notes) : null, r.client ? pt.el('span', 'pt-chip', r.client) : null, r.momId ? pt.el('span', 'pt-chip', `🗒️ ${r.momTitle || 'From MoM'}`) : null];
     },
     foot: (r) => pt.person(r.owner)
   });
@@ -112,7 +114,8 @@ dash.draw('pipeBoard', (el) => {
 dash.draw('tasksBody', (el) => {
   const today = pt.today(); const f = pt.taskFilter;
   pt.table(el, 'tasks', [
-    {key: 'title'}, {key: 'client', chip: true}, {key: 'owner', person: true},
+    {key: 'title', fmt: (v, r) => r.notes ? `${v || '(untitled)'} — ${r.notes}` : (v || '—')}, {key: 'client', chip: true},
+    {key: 'engagement', fmt: (v) => v || '—'}, {key: 'owner', person: true},
     {key: 'deadline', fmt: (v) => pt.fmtDate(v), cls: (r) => (r.status !== 'Done' && r.deadline && r.deadline < today) ? 'pt-bad' : ''},
     {key: 'priority', label: 'Priority', pill: 'priority'},
     {key: 'status', label: 'Status', pill: 'status'}
