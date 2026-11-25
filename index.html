@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRCH Team Tracker</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@400&display=swap">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="style.css">
+<script src="vendor/d3.min.js"></script>
+</head>
+<body>
+<div id="dash-root">
+<div class='pt' id='prch-tracker'>
+<header class='pt-hero' id='hero'>
+<div>
+<div class='pt-brand'><img class='pt-logo' src='logo.png' alt='Public Relations Clubhouse — Connect · Growth' width='159' height='70'><span class='pt-eyebrow'>Team Tracker</span></div>
+<h1 class='pt-title'><span data-draw='greet'>—</span>, PRCH team 👋</h1>
+<p class='pt-lede' id='lede'>There are <span class='pt-strong' data-draw='kpi' data-field='openTasks'>—</span> active tasks, <span class='pt-strong' data-draw='kpi' data-field='overdue'>—</span> of them overdue, and the active pipeline is worth <span class='pt-strong' data-draw='kpi' data-fmt='rp' data-field='pipelineValue'>—</span>.</p>
+</div>
+<div class='pt-hero-date' data-draw='todayLabel'>—</div>
+</header>
+
+<nav class='pt-tabs' role='tablist' aria-label='Tracker sections'>
+<button type='button' class='pt-tab' role='tab' data-tab='ringkasan' aria-selected='true'>🏠 Overview</button>
+<button type='button' class='pt-tab' role='tab' data-tab='task' aria-selected='false'>📋 Tasks <span class='pt-count' data-draw='kpi' data-field='openTasks'>—</span></button>
+<button type='button' class='pt-tab' role='tab' data-tab='mom' aria-selected='false'>🗒️ MoM <span class='pt-count' data-draw='kpi' data-field='momCount'>—</span></button>
+<button type='button' class='pt-tab' role='tab' data-tab='pipeline' aria-selected='false'>💼 Pipeline <span class='pt-count' data-draw='kpi' data-field='activeDeals'>—</span></button>
+<button type='button' class='pt-tab' role='tab' data-tab='collaterals' aria-selected='false'>📁 Collaterals <span class='pt-count' data-draw='kpi' data-field='collatOpen'>—</span></button>
+<button type='button' class='pt-tab' role='tab' data-tab='tim' aria-selected='false'>👥 Team <span class='pt-count' data-draw='kpi' data-field='teamCount'>—</span></button>
+</nav>
+
+<div class='pt-datatools'>
+<span>Data is saved in this browser.</span>
+<button type='button' id='dataExport'>⬇ Export data</button>
+<label>⬆ Import data<input type='file' id='dataImport' accept='application/json,.json'></label>
+</div>
+
+<p id='unsaved' class='pt-warn' hidden>That change was not saved. Check that your browser allows local storage for this site.</p>
+<datalist id='clientList' data-draw='clientList'></datalist>
+
+<section class='pt-sec' id='ringkasan'>
+<div class='pt-kpis'>
+<div class='pt-card pt-kpi' id='kpi-open' style='--pt-accent:var(--pt-c1)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>📋</span><span class='pt-kpi-label'>Active tasks</span></div><div class='pt-kpi-val' data-draw='kpi' data-field='openTasks'>—</div><div class='pt-kpi-sub'>Not marked Done yet</div></div>
+<div class='pt-card pt-kpi' id='kpi-overdue' style='--pt-accent:var(--color-bad)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>⏰</span><span class='pt-kpi-label'>Overdue</span></div><div class='pt-kpi-val' data-draw='kpi' data-badwhen='1' data-field='overdue'>—</div><div class='pt-kpi-sub'>Active tasks past their deadline</div></div>
+<div class='pt-card pt-kpi' id='kpi-pipe' style='--pt-accent:var(--pt-c2)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>💼</span><span class='pt-kpi-label'>Active pipeline</span></div><div class='pt-kpi-val' data-draw='kpi' data-fmt='rp' data-field='pipelineValue'>—</div><div class='pt-kpi-sub'><span data-draw='kpi' data-field='activeDeals'>—</span> clients in Prospect, Pitching or Negotiation</div></div>
+<div class='pt-card pt-kpi' id='kpi-won' style='--pt-accent:var(--color-ok)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>🏆</span><span class='pt-kpi-label'>Deals won</span></div><div class='pt-kpi-val' data-draw='kpi' data-fmt='rp' data-field='wonValue'>—</div><div class='pt-kpi-sub'>From <span data-draw='kpi' data-field='dealsWon'>—</span> clients at Deal stage</div></div>
+<div class='pt-card pt-kpi' id='kpi-coll' style='--pt-accent:var(--color-warn)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>📝</span><span class='pt-kpi-label'>Collateral in review</span></div><div class='pt-kpi-val' data-draw='kpi' data-field='collatReview'>—</div><div class='pt-kpi-sub'>Documents waiting for review</div></div>
+</div>
+<div class='pt-grid2'>
+<div class='pt-card' id='workload'><h2>Team workload</h2><p class='pt-sub'>Open tasks per person. The red part is overdue.</p><div class='pt-chart' data-draw='workloadChart'></div></div>
+<div class='pt-card' id='deadline'><h2>Upcoming deadlines</h2><p class='pt-sub'>Active tasks that are overdue or due within 7 days.</p><ul class='pt-list' data-draw='upcoming'></ul></div>
+</div>
+<div class='pt-card' id='pipeline-tahap'><h2>Pipeline by stage</h2><p class='pt-sub'>Number of clients and total project value at each stage.</p><div class='pt-chart' data-draw='pipeChart'></div></div>
+</section>
+
+<section class='pt-sec' id='task' hidden>
+<div class='pt-sec-head'><div><h2>Team tasks</h2><p class='pt-sub'>Drag cards between columns to change status, or use the arrow buttons on each card.</p></div>
+<div class='pt-seg' role='group' aria-label='Task view'><button type='button' class='pt-segbtn' data-for='task' data-view='board' aria-pressed='true'>Board</button><button type='button' class='pt-segbtn' data-for='task' data-view='table' aria-pressed='false'>Table</button></div></div>
+<details class='pt-add' id='add-task'><summary>＋ Add task</summary>
+<form class='pt-form' data-col='tasks'>
+<label>Task name<input name='title' required placeholder='e.g. Draft launch press release'></label>
+<label>Client<input name='client' list='clientList' placeholder='Client name'></label>
+<label>PIC<select name='owner' class='dash-select' data-draw='ownerSelect'></select></label>
+<label>Deadline<input type='date' name='deadline'></label>
+<label>Priority<select name='priority' class='dash-select'><option>High</option><option selected>Medium</option><option>Low</option></select></label>
+<label>Status<select name='status' class='dash-select'><option>To do</option><option>In progress</option><option>Review</option><option>Done</option></select></label>
+<label>From MoM (optional)<select name='momId' class='dash-select' data-draw='momSelect'></select></label>
+<button class='pt-btn' type='submit'>Save task</button>
+</form></details>
+<div class='pt-view' data-of='task' data-view='board'><div class='pt-board' id='board-task' data-draw='taskBoard'></div></div>
+<div class='pt-view' data-of='task' data-view='table' hidden>
+<div class='pt-toolbar'><select class='dash-select' id='taskFilter' aria-label='Filter tasks'><option value='open'>Open</option><option value='all'>All tasks</option><option value='done'>Done</option></select></div>
+<div class='pt-tablewrap'><table class='pt-table' id='tabel-task'><thead><tr><th>Task</th><th>Client</th><th>PIC</th><th>Deadline</th><th>Priority</th><th>Status</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='tasksBody'></tbody></table></div>
+</div>
+</section>
+
+<section class='pt-sec' id='mom' hidden>
+<div class='pt-sec-head'><div><h2>Minutes of Meeting</h2><p class='pt-sub'>Record meetings here. Action items automatically become team tasks. Click a MoM to see details, update progress and export it to Word.</p></div></div>
+<details class='pt-add' id='add-mom'><summary>＋ New MoM</summary>
+<form class='pt-form' data-col='mom'>
+<label>Meeting title<input name='title' required placeholder='e.g. BYD weekly sync'></label>
+<label>Date<input type='date' name='date' required></label>
+<label>Client<input name='client' list='clientList' placeholder='Client name'></label>
+<label>Note-taker<select name='notulis' class='dash-select' data-draw='ownerSelect'></select></label>
+<label class='pt-wide'>Attendees<input name='attendees' placeholder='Comma-separated: Sadad, Aji, Mr. Budi (client)'></label>
+<label class='pt-wide'>Agenda<textarea name='agenda' placeholder='One point per line'></textarea></label>
+<label class='pt-wide'>Discussion<textarea name='notes' placeholder='Summary of the discussion'></textarea></label>
+<label class='pt-wide'>Decisions<textarea name='decisions' placeholder='What was agreed'></textarea></label>
+<div class='pt-ai-head'><span>Action items <span class='pt-meta'>Automatically added to Tasks as To do</span></span><button type='button' class='pt-linkbtn' id='aiMore'>＋ Add row</button></div>
+<div class='pt-ai-row'><input name='ai_task_1' aria-label='Action item 1' placeholder='Action item'><select name='ai_owner_1' class='dash-select' aria-label='PIC action item 1' data-draw='ownerSelect'></select><input type='date' name='ai_deadline_1' aria-label='Deadline action item 1'></div>
+<div class='pt-ai-row'><input name='ai_task_2' aria-label='Action item 2' placeholder='Action item'><select name='ai_owner_2' class='dash-select' aria-label='PIC action item 2' data-draw='ownerSelect'></select><input type='date' name='ai_deadline_2' aria-label='Deadline action item 2'></div>
+<div class='pt-ai-row'><input name='ai_task_3' aria-label='Action item 3' placeholder='Action item'><select name='ai_owner_3' class='dash-select' aria-label='PIC action item 3' data-draw='ownerSelect'></select><input type='date' name='ai_deadline_3' aria-label='Deadline action item 3'></div>
+<div class='pt-ai-row' hidden><input name='ai_task_4' aria-label='Action item 4' placeholder='Action item'><select name='ai_owner_4' class='dash-select' aria-label='PIC action item 4' data-draw='ownerSelect'></select><input type='date' name='ai_deadline_4' aria-label='Deadline action item 4'></div>
+<div class='pt-ai-row' hidden><input name='ai_task_5' aria-label='Action item 5' placeholder='Action item'><select name='ai_owner_5' class='dash-select' aria-label='PIC action item 5' data-draw='ownerSelect'></select><input type='date' name='ai_deadline_5' aria-label='Deadline action item 5'></div>
+<div class='pt-ai-row' hidden><input name='ai_task_6' aria-label='Action item 6' placeholder='Action item'><select name='ai_owner_6' class='dash-select' aria-label='PIC action item 6' data-draw='ownerSelect'></select><input type='date' name='ai_deadline_6' aria-label='Deadline action item 6'></div>
+<div class='pt-ai-row' hidden><input name='ai_task_7' aria-label='Action item 7' placeholder='Action item'><select name='ai_owner_7' class='dash-select' aria-label='PIC action item 7' data-draw='ownerSelect'></select><input type='date' name='ai_deadline_7' aria-label='Deadline action item 7'></div>
+<div class='pt-ai-row' hidden><input name='ai_task_8' aria-label='Action item 8' placeholder='Action item'><select name='ai_owner_8' class='dash-select' aria-label='PIC action item 8' data-draw='ownerSelect'></select><input type='date' name='ai_deadline_8' aria-label='Deadline action item 8'></div>
+<button class='pt-btn pt-submit' type='submit'>Save MoM</button>
+</form></details>
+<div class='pt-momlist' id='daftar-mom' data-draw='momList'></div>
+</section>
+
+<section class='pt-sec' id='pipeline' hidden>
+<div class='pt-sec-head'><div><h2>Client pipeline</h2><p class='pt-sub'>From prospect to deal. Drag cards to move them between stages.</p></div>
+<div class='pt-seg' role='group' aria-label='Pipeline view'><button type='button' class='pt-segbtn' data-for='pipeline' data-view='board' aria-pressed='true'>Board</button><button type='button' class='pt-segbtn' data-for='pipeline' data-view='table' aria-pressed='false'>Table</button></div></div>
+<details class='pt-add' id='add-pipeline'><summary>＋ Add prospect</summary>
+<form class='pt-form' data-col='pipeline'>
+<label>Client / prospect<input name='client' required list='clientList' placeholder='Company name'></label>
+<label>Stage<select name='stage' class='dash-select'><option>Prospect</option><option>Pitching</option><option>Negotiation</option><option>Deal</option><option>Lost</option></select></label>
+<label>PRCH role<select name='contract' class='dash-select'><option>Main con</option><option>Subcon</option></select></label>
+<label>Partner (main con / subcon)<input name='partner' placeholder='Partner agency or vendor name'></label>
+<label>Project value (IDR)<input type='number' name='value' min='0' step='1000' placeholder='0'></label>
+<label>PIC<select name='pic' class='dash-select' data-draw='ownerSelect'></select></label>
+<label>Next step<input name='nextStep' placeholder='e.g. send the proposal on Friday'></label>
+<button class='pt-btn' type='submit'>Save prospect</button>
+</form></details>
+<div class='pt-view' data-of='pipeline' data-view='board'><div class='pt-board' id='board-pipeline' data-draw='pipeBoard'></div></div>
+<div class='pt-view' data-of='pipeline' data-view='table' hidden>
+<div class='pt-tablewrap'><table class='pt-table' id='tabel-pipeline'><thead><tr><th>Client</th><th>Stage</th><th>PRCH role</th><th>Partner</th><th>Value</th><th>PIC</th><th>Next step</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='pipeBody'></tbody></table></div>
+</div>
+</section>
+
+<section class='pt-sec' id='collaterals' hidden>
+<div class='pt-sec-head'><div><h2>Collaterals &amp; documents</h2><p class='pt-sub'>Press releases, decks, proposals and other files, with their review status.</p></div></div>
+<details class='pt-add' id='add-collaterals'><summary>＋ Add document</summary>
+<form class='pt-form' data-col='collaterals'>
+<label>Document name<input name='name' required placeholder='e.g. Q1 media kit'></label>
+<label>Client<input name='client' list='clientList' placeholder='Client name'></label>
+<label>Type<select name='type' class='dash-select'><option>Press release</option><option>Deck</option><option>Proposal</option><option>Media kit</option><option>Report</option><option>Other</option></select></label>
+<label>PIC<select name='owner' class='dash-select' data-draw='ownerSelect'></select></label>
+<label>Status<select name='status' class='dash-select'><option>Draft</option><option>Review</option><option>Final</option></select></label>
+<label>File link<input type='url' name='link' placeholder='https://'></label>
+<button class='pt-btn' type='submit'>Save document</button>
+</form></details>
+<div class='pt-tablewrap'><table class='pt-table' id='tabel-collaterals'><thead><tr><th>Document</th><th>Client</th><th>Type</th><th>PIC</th><th>Status</th><th>Link</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='collBody'></tbody></table></div>
+</section>
+
+<section class='pt-sec' id='tim' hidden>
+<div class='pt-sec-head'><div><h2>Team members</h2><p class='pt-sub'>Names here appear as PIC options in the other tabs.</p></div></div>
+<details class='pt-add' id='add-tim'><summary>＋ Add member</summary>
+<form class='pt-form' data-col='team'>
+<label>Name<input name='name' required placeholder='Member name'></label>
+<label>Role<input name='role' placeholder='e.g. PR Consultant'></label>
+<button class='pt-btn' type='submit'>Save member</button>
+</form></details>
+<div class='pt-team' id='kartu-tim' data-draw='teamCards'></div>
+</section>
+</div>
+</div>
+
+<script src="dash-shim.js"></script>
+<script src="core.js"></script>
+<script src="draw.js"></script>
+<script src="mom.js"></script>
+<script src="ui.js"></script>
+<script>dash.__start();</script>
+</body>
+</html>
