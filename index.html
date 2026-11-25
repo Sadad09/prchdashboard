@@ -7,8 +7,8 @@
 <link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@400&display=swap">
-<link rel="stylesheet" href="base.css?v=9">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="base.css?v=10">
+<link rel="stylesheet" href="style.css?v=10">
 <script src="vendor/d3.min.js"></script>
 </head>
 <body>
@@ -150,10 +150,12 @@
 <label>Type<select name='type' class='dash-select'><option>Press release</option><option>Deck</option><option>Proposal</option><option>Media kit</option><option>Report</option><option>Other</option></select></label>
 <label>PIC<select name='owner' class='dash-select' data-draw='ownerSelect'></select></label>
 <label>Status<select name='status' class='dash-select'><option>Draft</option><option>Review</option><option>Final</option></select></label>
-<label>File link<input type='url' name='link' placeholder='https://'></label>
+<label class='pt-wide'>Upload file<input type='file' name='file' accept='.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.key,.png,.jpg,.jpeg,.webp,.mp4,.zip'><span class='pt-meta'>PDF, PowerPoint, Word, Excel, images, max 25 MB</span></label>
+<label class='pt-wide'>…or file link<input type='url' name='link' placeholder='https://drive.google.com/…'></label>
+<p class='pt-meta pt-upload-msg pt-wide' hidden></p>
 <button class='pt-btn' type='submit'>Save document</button>
 </form></details>
-<div class='pt-tablewrap'><table class='pt-table' id='tabel-collaterals'><thead><tr><th>Document</th><th>Client</th><th>Type</th><th>PIC</th><th>Status</th><th>Link</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='collBody'></tbody></table></div>
+<div class='pt-tablewrap'><table class='pt-table' id='tabel-collaterals'><thead><tr><th>Document</th><th>Client</th><th>Type</th><th>PIC</th><th>Status</th><th>File</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='collBody'></tbody></table></div>
 </section>
 
 <section class='pt-sec' id='tim' hidden>
@@ -213,13 +215,13 @@
 <div data-view='error' hidden><button type='button' class='pt-btn' onclick='location.reload()'>Reload</button></div>
 </div>
 </div>
-<script src="firebase-config.js?v=9"></script>
-<script type="module" src="fb.js?v=9"></script>
-<script src="dash-shim.js?v=9"></script>
-<script src="core.js?v=9"></script>
-<script src="draw.js?v=9"></script>
-<script src="mom.js?v=9"></script>
-<script src="ui.js?v=9"></script>
+<script src="firebase-config.js?v=10"></script>
+<script type="module" src="fb.js?v=10"></script>
+<script src="dash-shim.js?v=10"></script>
+<script src="core.js?v=10"></script>
+<script src="draw.js?v=10"></script>
+<script src="mom.js?v=10"></script>
+<script src="ui.js?v=10"></script>
 <script>dash.__start();</script>
 </body>
 </html>

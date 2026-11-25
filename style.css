@@ -242,3 +242,6 @@
 @media (prefers-color-scheme: dark){.pt-side{background:#0A0F1F}}
 @media print{.pt-side{display:none}.pt.pt-app{display:block}}
 .pt-app .pt-kpi-val{font-size:clamp(24px,2.3vw,32px)}
+.pt-file{display:inline-block;max-width:260px;padding:3px 10px;border-radius:8px;background:color-mix(in srgb,var(--pt-c1) 10%,transparent);text-decoration:none;font-size:var(--cds-font-size-caption);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt-file:hover{background:color-mix(in srgb,var(--pt-c1) 18%,transparent)}
+.pt-form input[type=file]{padding:6px}

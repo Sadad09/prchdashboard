@@ -30,9 +30,10 @@ Data is stored in **Firebase Firestore** (project `prchdashboard`) and syncs liv
 - Roles: **Admin** (manage access), **PRCH team**, **Partner** (shown as "Name (Agency)").
 - Every change is stamped "Changes made by …" and listed under **Recent changes**.
 
-### Firestore rules
+### Security rules
 
-Paste `firestore.rules` into Firebase console → Firestore Database → Rules → **Publish** whenever it changes.
+- `firestore.rules` → Firebase console → Firestore Database → Rules → **Publish**
+- `storage.rules` → Firebase console → Storage → Rules → **Publish** (file uploads in Collaterals; needs the Blaze plan)
 
 ### Backup
 
@@ -48,7 +49,8 @@ Paste `firestore.rules` into Firebase console → Firestore Database → Rules �
 | `firebase-config.js` | Firebase project config and admin email |
 | `fb.js` | Loads the Firebase SDK |
 | `dash-shim.js` | Data layer (Firestore), sign-in and access, redraw logic, export/import |
-| `firestore.rules` | Security rules to paste into Firebase |
+| `firestore.rules` | Database security rules to paste into Firebase |
+| `storage.rules` | File upload security rules to paste into Firebase |
 | `core.js` | Shared helpers, tables, boards, charts, KPI calculations |
 | `draw.js` | Draws each section (KPIs, charts, boards, tables, team cards) |
 | `mom.js` | Minutes of Meeting list and Word (.docx) export |

@@ -150,7 +150,8 @@ const CST = {Draft: 0, Review: 1, Final: 2};
 dash.draw('collBody', (el) => {
   pt.table(el, 'collaterals', [
     {key: 'name'}, {key: 'client', chip: true}, {key: 'type', chip: true}, {key: 'owner', person: true},
-    {key: 'status', label: 'Status', pill: 'collat'}, {key: 'link', link: true}
+    {key: 'status', label: 'Status', pill: 'collat'},
+    {key: 'link', link: true, linkText: (r) => r.fileName ? `📎 ${r.fileName.length > 28 ? r.fileName.slice(0, 26) + '…' : r.fileName}${r.fileSize ? ` · ${r.fileSize < 1048576 ? `${Math.max(1, Math.round(r.fileSize / 1024))} KB` : `${(r.fileSize / 1048576).toFixed(1)} MB`}` : ''}` : '🔗 Open link'}
   ], {
     sort: (a, b) => (CST[a.status] ?? 0) - (CST[b.status] ?? 0) || String(a.name || '').localeCompare(String(b.name || '')),
     empty: 'No documents yet. Click “＋ Add document” above.'

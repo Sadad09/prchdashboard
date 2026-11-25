@@ -1,0 +1,18 @@
+rules_version = '2';
+// Paste into Firebase console → Storage → Rules, then Publish.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+    function email() { return request.auth.token.email.lower(); }
+    // Owner, or anyone the admin accepted (members/{email} in Firestore)
+    function allowed() {
+      return signedIn() && (email() == 'sadadrasyad2@gmail.com'
+        || firestore.exists(/databases/(default)/documents/members/$(email())));
+    }
+    match /collaterals/{file} {
+      allow read: if allowed();
+      allow create, update: if allowed() && request.resource.size < 25 * 1024 * 1024;
+      allow delete: if allowed();
+    }
+  }
+}

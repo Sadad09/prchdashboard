@@ -105,7 +105,7 @@ pt.table = (el, k, cols, opts) => {
       else if (c.chip) td.append(v ? pt.el('span', 'pt-chip', v) : pt.el('span', 'pt-meta', '—'));
       else if (c.link) {
         const u = typeof v === 'string' ? v.trim() : '';
-        if (u.startsWith('https://') || u.startsWith('http://')) { const a = pt.el('a', '', 'Buka ↗'); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; td.append(a); }
+        if (u.startsWith('https://') || u.startsWith('http://')) { const a = pt.el('a', c.linkText ? 'pt-file' : '', c.linkText ? c.linkText(r) : 'Open ↗'); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; td.append(a); }
         else td.textContent = u || '—';
       } else td.textContent = c.fmt ? c.fmt(v, r) : ((v == null || v === '') ? '—' : String(v));
       const cls = [c.num ? 'pt-num' : '', c.cls ? c.cls(r) : ''].filter(Boolean).join(' ');

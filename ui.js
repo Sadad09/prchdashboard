@@ -54,6 +54,21 @@ document.querySelectorAll('.pt-form[data-col]').forEach((f) => f.addEventListene
     else delete row.momId;
   }
   const btns = f.querySelectorAll('button'); btns.forEach((b) => { b.disabled = true; });
+  if ('file' in row) {
+    const file = row.file; delete row.file;
+    const msg = f.querySelector('.pt-upload-msg');
+    if (file && file.size) {
+      try {
+        if (msg) { msg.hidden = false; msg.textContent = 'Uploading… 0%'; }
+        const up = await window.ptUpload(file, (p) => { if (msg) msg.textContent = `Uploading… ${Math.round(p * 100)}%`; });
+        Object.assign(row, {link: up.url, fileName: up.name, filePath: up.path, fileSize: up.size});
+        if (msg) msg.hidden = true;
+      } catch (e) {
+        if (msg) { msg.hidden = false; msg.textContent = `Upload failed: ${e.code || e.message}`; }
+        btns.forEach((b) => { b.disabled = false; }); return;
+      }
+    }
+  }
   const ok = k === 'mom' ? await saveMom(row) : await pt.add(k, row);
   btns.forEach((b) => { b.disabled = false; });
   if (ok) {

@@ -97,10 +97,24 @@
         async delete() {
           const [, id] = splitPath(path); const before = (cache[col] && cache[col][id]) || {};
           await fb.deleteDoc(ref()); logActivity(col, 'deleted', before);
+          if (before.filePath) fb.deleteObject(fb.sRef(fb.storage, before.filePath)).catch((e) => console.warn('file delete', e));
         }
       };
     }
   };
+
+  // ---------- file uploads (Cloud Storage) ----------
+  const MAX_MB = 25;
+  window.ptUpload = (file, onProgress) => new Promise((resolve, reject) => {
+    if (!fb || !me) { reject(new Error('Sign in first.')); return; }
+    if (file.size > MAX_MB * 1024 * 1024) { reject(new Error(`File is larger than ${MAX_MB} MB.`)); return; }
+    const safe = file.name.replace(/[^\w.\- ]+/g, '_').slice(-120);
+    const path = `collaterals/${Date.now().toString(36)}-${safe}`;
+    const task = fb.uploadBytesResumable(fb.sRef(fb.storage, path), file, {contentType: file.type || 'application/octet-stream'});
+    task.on('state_changed', (s) => onProgress && onProgress(s.totalBytes ? s.bytesTransferred / s.totalBytes : 0),
+      reject,
+      async () => { try { resolve({url: await fb.getDownloadURL(task.snapshot.ref), path, name: file.name, size: file.size}); } catch (e) { reject(e); } });
+  });
 
   const downloads = {
     async save({filename, data}) {

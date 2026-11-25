@@ -5,10 +5,12 @@ import {
   getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc,
   onSnapshot, query, orderBy, limit, writeBatch
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { getStorage, ref as sRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js';
 
 const app = initializeApp(window.PRCH_CONFIG.firebase);
 window.fbApi = {
-  auth: getAuth(app), db: getFirestore(app),
+  auth: getAuth(app), db: getFirestore(app), storage: getStorage(app),
+  sRef, uploadBytesResumable, getDownloadURL, deleteObject,
   GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
   collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, onSnapshot, query, orderBy, limit, writeBatch
 };
