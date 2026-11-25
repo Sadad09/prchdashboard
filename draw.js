@@ -1,7 +1,14 @@
 (() => {
 const HARI = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-dash.draw('greet', (el) => { const h = new Date().getHours(); el.textContent = h < 12 ? 'Good morning' : (h < 18 ? 'Good afternoon' : 'Good evening'); });
+dash.draw('greet', (el) => {
+  const h = new Date().getHours();
+  const hi = h < 5 ? 'Good night' : h < 12 ? 'Good morning' : (h < 18 ? 'Good afternoon' : 'Good evening');
+  const who = window.ptWho && window.ptWho.get();
+  const first = who && who.name ? who.name.split(' ')[0] : '';
+  const em = pt.el('em', 'pt-title-name', first ? `${first}.` : 'team.');
+  el.replaceChildren(document.createTextNode(`${hi}, `), em);
+});
 dash.draw('todayLabel', (el) => { const d = new Date(); el.textContent = `${HARI[d.getDay()]}, ${pt.fmtDate(pt.iso(d))}`; });
 
 const drawNum = (src) => (el) => {

@@ -183,7 +183,9 @@
     if (msg != null && $('gateMsg')) $('gateMsg').textContent = msg;
   }
   const showBadge = () => {
-    if ($('whoBadge')) $('whoBadge').textContent = me ? `${label(me)}${isAdmin() ? ' · admin' : ''}` : '—';
+    if ($('whoBadge')) $('whoBadge').textContent = me ? label(me) : '—';
+    const sub = document.querySelector('.pt-me-sub'); if (sub) sub.textContent = me ? ({admin: 'Admin', team: 'PRCH team', partner: 'Partner'}[me.type] || '') : 'Not signed in';
+    if ($('whoAvatar')) $('whoAvatar').textContent = me && me.name ? me.name.trim()[0].toUpperCase() : '•';
     document.querySelectorAll('[data-admin-only]').forEach((el) => { el.hidden = !isAdmin(); });
   };
   const errText = (e) => (e && (e.code || e.message)) || 'unknown error';
