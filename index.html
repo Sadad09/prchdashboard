@@ -7,8 +7,8 @@
 <link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@400&display=swap">
-<link rel="stylesheet" href="base.css?v=5">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="base.css?v=6">
+<link rel="stylesheet" href="style.css?v=6">
 <script src="vendor/d3.min.js"></script>
 </head>
 <body>
@@ -46,12 +46,13 @@
 <div class='pt-kpis'>
 <div class='pt-card pt-kpi' id='kpi-open' style='--pt-accent:var(--pt-c1)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>📋</span><span class='pt-kpi-label'>Active tasks</span></div><div class='pt-kpi-val' data-draw='kpi' data-field='openTasks'>—</div><div class='pt-kpi-sub'>Not marked Done yet</div></div>
 <div class='pt-card pt-kpi' id='kpi-overdue' style='--pt-accent:var(--color-bad)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>⏰</span><span class='pt-kpi-label'>Overdue</span></div><div class='pt-kpi-val' data-draw='kpi' data-badwhen='1' data-field='overdue'>—</div><div class='pt-kpi-sub'>Active tasks past their deadline</div></div>
-<div class='pt-card pt-kpi' id='kpi-pipe' style='--pt-accent:var(--pt-c2)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>💼</span><span class='pt-kpi-label'>Active pipeline</span></div><div class='pt-kpi-val' data-draw='kpi' data-fmt='rp' data-field='pipelineValue'>—</div><div class='pt-kpi-sub'><span data-draw='kpi' data-field='activeDeals'>—</span> clients in Prospect, Pitching or Negotiation</div></div>
+<div class='pt-card pt-kpi' id='kpi-pipe' style='--pt-accent:var(--pt-c2)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>💼</span><span class='pt-kpi-label'>Active pipeline</span></div><div class='pt-kpi-val' data-draw='kpi' data-fmt='rp' data-field='pipelineValue'>—</div><div class='pt-kpi-sub'><span data-draw='kpi' data-field='activeDeals'>—</span> clients in Pending, Prospect, Pitching or Negotiation</div></div>
 <div class='pt-card pt-kpi' id='kpi-won' style='--pt-accent:var(--color-ok)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>🏆</span><span class='pt-kpi-label'>Deals won</span></div><div class='pt-kpi-val' data-draw='kpi' data-fmt='rp' data-field='wonValue'>—</div><div class='pt-kpi-sub'>From <span data-draw='kpi' data-field='dealsWon'>—</span> clients at Deal stage</div></div>
 <div class='pt-card pt-kpi' id='kpi-coll' style='--pt-accent:var(--color-warn)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>📝</span><span class='pt-kpi-label'>Collateral in review</span></div><div class='pt-kpi-val' data-draw='kpi' data-field='collatReview'>—</div><div class='pt-kpi-sub'>Documents waiting for review</div></div>
 </div>
 <div class='pt-grid2'>
 <div class='pt-card' id='workload'><h2>Team workload</h2><p class='pt-sub'>Open tasks per person. The red part is overdue.</p><div class='pt-chart' data-draw='workloadChart'></div></div>
+<div class='pt-card' id='meetings-next'><h2>Upcoming meetings</h2><p class='pt-sub'>The next meetings on the schedule.</p><ul class='pt-list' data-draw='meetingNext'></ul></div>
 <div class='pt-card' id='deadline'><h2>Upcoming deadlines</h2><p class='pt-sub'>Active tasks that are overdue or due within 7 days.</p><ul class='pt-list' data-draw='upcoming'></ul></div>
 </div>
 <div class='pt-card' id='recent'><h2>Recent changes</h2><p class='pt-sub'>Who added, edited or deleted what, newest first.</p><ul class='pt-list' data-draw='activity'></ul></div>
@@ -61,6 +62,21 @@
 <section class='pt-sec' id='task' hidden>
 <div class='pt-sec-head'><div><h2>Team tasks</h2><p class='pt-sub'>Drag cards between columns to change status, or use the arrow buttons on each card.</p></div>
 <div class='pt-seg' role='group' aria-label='Task view'><button type='button' class='pt-segbtn' data-for='task' data-view='board' aria-pressed='true'>Board</button><button type='button' class='pt-segbtn' data-for='task' data-view='table' aria-pressed='false'>Table</button></div></div>
+<div class='pt-card pt-sched' id='schedule'>
+<div class='pt-sec-head'><div><h2>📅 Schedule</h2><p class='pt-sub'>Upcoming meetings with clients, partners and the team.</p></div></div>
+<details class='pt-add' id='add-meeting'><summary>＋ Add meeting</summary>
+<form class='pt-form' data-col='meetings'>
+<label>Meeting<input name='title' required placeholder='e.g. Pitching BYD Q1'></label>
+<label>Client<input name='client' list='clientList' placeholder='Client name'></label>
+<label>Date<input type='date' name='date' required></label>
+<label>Time<input type='time' name='time'></label>
+<label>Location / link<input name='location' placeholder='Office, cafe, or Zoom/Meet link'></label>
+<label>PIC<select name='owner' class='dash-select' data-draw='ownerSelect'></select></label>
+<label class='pt-wide'>Attendees / agenda<input name='notes' placeholder='Who joins and what to prepare'></label>
+<button class='pt-btn' type='submit'>Save meeting</button>
+</form></details>
+<ul class='pt-list' data-draw='meetingList'></ul>
+</div>
 <details class='pt-add' id='add-task'><summary>＋ Add task</summary>
 <form class='pt-form' data-col='tasks'>
 <label>Task name<input name='title' required placeholder='e.g. Draft launch press release'></label>
@@ -68,16 +84,14 @@
 <label>PIC<select name='owner' class='dash-select' data-draw='ownerSelect'></select></label>
 <label>Deadline<input type='date' name='deadline'></label>
 <label>Priority<select name='priority' class='dash-select'><option>High</option><option selected>Medium</option><option>Low</option></select></label>
-<label>Status<select name='status' class='dash-select'><option>Pending</option><option selected>To do</option><option>In progress</option><option>Review</option><option>Done</option></select></label>
-<label>Engagement (for Pending)<select name='engagement' class='dash-select'><option value=''>—</option><option>Retainer</option><option>Project based</option></select></label>
-<label class='pt-wide'>Notes<input name='notes' placeholder='e.g. client needs answer by Friday, est. Rp20 jt/bulan'></label>
+<label>Status<select name='status' class='dash-select'><option>To do</option><option>In progress</option><option>Review</option><option>Done</option></select></label>
 <label>From MoM (optional)<select name='momId' class='dash-select' data-draw='momSelect'></select></label>
 <button class='pt-btn' type='submit'>Save task</button>
 </form></details>
 <div class='pt-view' data-of='task' data-view='board'><div class='pt-board' id='board-task' data-draw='taskBoard'></div></div>
 <div class='pt-view' data-of='task' data-view='table' hidden>
 <div class='pt-toolbar'><select class='dash-select' id='taskFilter' aria-label='Filter tasks'><option value='open'>Open</option><option value='all'>All tasks</option><option value='done'>Done</option></select></div>
-<div class='pt-tablewrap'><table class='pt-table' id='tabel-task'><thead><tr><th>Task</th><th>Client</th><th>Engagement</th><th>PIC</th><th>Deadline</th><th>Priority</th><th>Status</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='tasksBody'></tbody></table></div>
+<div class='pt-tablewrap'><table class='pt-table' id='tabel-task'><thead><tr><th>Task</th><th>Client</th><th>PIC</th><th>Deadline</th><th>Priority</th><th>Status</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='tasksBody'></tbody></table></div>
 </div>
 </section>
 
@@ -108,22 +122,24 @@
 </section>
 
 <section class='pt-sec' id='pipeline' hidden>
-<div class='pt-sec-head'><div><h2>Client pipeline</h2><p class='pt-sub'>From prospect to deal. Drag cards to move them between stages.</p></div>
+<div class='pt-sec-head'><div><h2>Client pipeline</h2><p class='pt-sub'>From prospect to deal. Drag cards to move them between stages. <b>Pending</b> = the client is ready and the decision to take it is ours.</p></div>
 <div class='pt-seg' role='group' aria-label='Pipeline view'><button type='button' class='pt-segbtn' data-for='pipeline' data-view='board' aria-pressed='true'>Board</button><button type='button' class='pt-segbtn' data-for='pipeline' data-view='table' aria-pressed='false'>Table</button></div></div>
 <details class='pt-add' id='add-pipeline'><summary>＋ Add prospect</summary>
 <form class='pt-form' data-col='pipeline'>
 <label>Client / prospect<input name='client' required list='clientList' placeholder='Company name'></label>
-<label>Stage<select name='stage' class='dash-select'><option>Prospect</option><option>Pitching</option><option>Negotiation</option><option>Deal</option><option>Lost</option></select></label>
+<label>Stage<select name='stage' class='dash-select'><option>Pending</option><option selected>Prospect</option><option>Pitching</option><option>Negotiation</option><option>Deal</option><option>Lost</option></select></label>
 <label>PRCH role<select name='contract' class='dash-select'><option>Main con</option><option>Subcon</option></select></label>
 <label>Partner (main con / subcon)<input name='partner' placeholder='Partner agency or vendor name'></label>
 <label>Project value (IDR)<input type='number' name='value' min='0' step='1000' placeholder='0'></label>
 <label>PIC<select name='pic' class='dash-select' data-draw='ownerSelect'></select></label>
+<label>Engagement<select name='engagement' class='dash-select'><option value=''>—</option><option>Retainer</option><option>Project based</option></select></label>
 <label>Next step<input name='nextStep' placeholder='e.g. send the proposal on Friday'></label>
+<label class='pt-wide'>Notes<input name='notes' placeholder='e.g. client needs our answer by Friday, est. Rp20 jt/month'></label>
 <button class='pt-btn' type='submit'>Save prospect</button>
 </form></details>
 <div class='pt-view' data-of='pipeline' data-view='board'><div class='pt-board' id='board-pipeline' data-draw='pipeBoard'></div></div>
 <div class='pt-view' data-of='pipeline' data-view='table' hidden>
-<div class='pt-tablewrap'><table class='pt-table' id='tabel-pipeline'><thead><tr><th>Client</th><th>Stage</th><th>PRCH role</th><th>Partner</th><th>Value</th><th>PIC</th><th>Next step</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='pipeBody'></tbody></table></div>
+<div class='pt-tablewrap'><table class='pt-table' id='tabel-pipeline'><thead><tr><th>Client</th><th>Stage</th><th>Engagement</th><th>PRCH role</th><th>Partner</th><th>Value</th><th>PIC</th><th>Next step</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='pipeBody'></tbody></table></div>
 </div>
 </section>
 
@@ -168,11 +184,11 @@
 </form>
 </div>
 </div>
-<script src="dash-shim.js?v=5"></script>
-<script src="core.js?v=5"></script>
-<script src="draw.js?v=5"></script>
-<script src="mom.js?v=5"></script>
-<script src="ui.js?v=5"></script>
+<script src="dash-shim.js?v=6"></script>
+<script src="core.js?v=6"></script>
+<script src="draw.js?v=6"></script>
+<script src="mom.js?v=6"></script>
+<script src="ui.js?v=6"></script>
 <script>dash.__start();</script>
 </body>
 </html>

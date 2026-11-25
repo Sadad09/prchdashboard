@@ -81,14 +81,12 @@ const byDeadline = (a, b) => (a.deadline || '9999').localeCompare(b.deadline || 
 dash.draw('taskBoard', (el) => {
   pt.board(el, 'tasks', {
     field: 'status', tone: 'status', limit: {Done: 6}, deletable: true,
-    hints: {Pending: 'Client opportunity waiting for our decision: take it or not.'},
     sort: (a, b) => a.status === 'Done' && b.status === 'Done' ? String(b.createdAt || '').localeCompare(String(a.createdAt || '')) : byDeadline(a, b),
     card: (r) => {
       const top = pt.el('div', 'pt-kcard-top'); top.append(pt.tag('priority', r.priority || 'Medium'));
-      if (r.engagement) top.append(pt.tag('engagement', r.engagement));
       const dl = pt.deadlineBadge(r); if (dl) top.append(dl);
       const title = pt.el('div', 'pt-kcard-title', r.title || '(untitled)');
-      return [top, title, r.notes ? pt.el('span', 'pt-meta pt-note', r.notes) : null, r.client ? pt.el('span', 'pt-chip', r.client) : null, r.momId ? pt.el('span', 'pt-chip', `🗒️ ${r.momTitle || 'From MoM'}`) : null];
+      return [top, title, r.client ? pt.el('span', 'pt-chip', r.client) : null, r.momId ? pt.el('span', 'pt-chip', `🗒️ ${r.momTitle || 'From MoM'}`) : null];
     },
     foot: (r) => pt.person(r.owner)
   });
@@ -100,12 +98,14 @@ dash.draw('pipeBoard', (el) => {
     sort: (a, b) => (Number(b.value) || 0) - (Number(a.value) || 0),
     headExtra: (rows) => pt.rupiahShort(rows.reduce((s, r) => s + (Number(r.value) || 0), 0)),
     emptyCol: 'No clients at this stage.',
+    hints: {Pending: 'Client is ready; waiting for our decision to take it or not.'},
     card: (r) => {
       const title = pt.el('div', 'pt-kcard-title', r.client || '(unnamed)');
       const val = pt.el('div', 'pt-kcard-value', pt.rupiah(r.value));
       const top = pt.el('div', 'pt-kcard-top'); top.append(pt.tag('contract', r.contract || 'Main con'));
+      if (r.engagement) top.append(pt.tag('engagement', r.engagement));
       if (r.partner) top.append(pt.el('span', 'pt-meta', `${r.contract === 'Subcon' ? 'Main con' : 'Subcon'}: ${r.partner}`));
-      return [top, title, val, r.nextStep ? pt.el('span', 'pt-meta', `➡ ${r.nextStep}`) : null];
+      return [top, title, val, r.notes ? pt.el('span', 'pt-meta pt-note', `📝 ${r.notes}`) : null, r.nextStep ? pt.el('span', 'pt-meta', `➡ ${r.nextStep}`) : null];
     },
     foot: (r) => pt.person(r.pic)
   });
@@ -114,8 +114,7 @@ dash.draw('pipeBoard', (el) => {
 dash.draw('tasksBody', (el) => {
   const today = pt.today(); const f = pt.taskFilter;
   pt.table(el, 'tasks', [
-    {key: 'title', fmt: (v, r) => r.notes ? `${v || '(untitled)'} — ${r.notes}` : (v || '—')}, {key: 'client', chip: true},
-    {key: 'engagement', fmt: (v) => v || '—'}, {key: 'owner', person: true},
+    {key: 'title'}, {key: 'client', chip: true}, {key: 'owner', person: true},
     {key: 'deadline', fmt: (v) => pt.fmtDate(v), cls: (r) => (r.status !== 'Done' && r.deadline && r.deadline < today) ? 'pt-bad' : ''},
     {key: 'priority', label: 'Priority', pill: 'priority'},
     {key: 'status', label: 'Status', pill: 'status'}
@@ -129,7 +128,8 @@ dash.draw('tasksBody', (el) => {
 dash.draw('pipeBody', (el) => {
   const ST = pt.opts('stage');
   pt.table(el, 'pipeline', [
-    {key: 'client'}, {key: 'stage', label: 'Stage', pill: 'stage'},
+    {key: 'client', fmt: (v, r) => r.notes ? `${v || '(unnamed)'} — ${r.notes}` : (v || '—')}, {key: 'stage', label: 'Stage', pill: 'stage'},
+    {key: 'engagement', fmt: (v) => v || '—'},
     {key: 'contract', label: 'PRCH role', pill: 'contract'}, {key: 'partner'},
     {key: 'value', num: true, fmt: (v) => pt.rupiah(v)},
     {key: 'pic', person: true}, {key: 'nextStep'}
@@ -192,4 +192,42 @@ dash.draw('activity', (el) => {
     li.append(pt.el('span', `pt-act is-${r.action}`, ICON[r.action] || '•'), body);
     return li;
   }));
+});
+
+const meetingItem = (r, withDelete) => {
+  const li = pt.el('li', 'pt-li');
+  const okDate = typeof r.date === 'string' && r.date.length >= 10;
+  const dt = pt.el('div', 'pt-mom-date');
+  dt.append(pt.el('span', 'pt-mom-day', okDate ? String(+r.date.slice(8, 10)) : '–'), pt.el('span', 'pt-mom-mon', okDate ? pt.shortDate(r.date).split(' ')[1] : ''));
+  const body = pt.el('div', 'pt-li-body');
+  body.append(pt.el('span', 'pt-li-title', r.title || '(untitled)'));
+  const meta = [r.time, r.client, r.owner ? `PIC: ${r.owner}` : ''].filter(Boolean).join(' · ');
+  if (meta) body.append(pt.el('span', 'pt-meta', meta));
+  const loc = typeof r.location === 'string' ? r.location.trim() : '';
+  if (loc.startsWith('https://') || loc.startsWith('http://')) { const a = pt.el('a', 'pt-meta', '🔗 Join link'); a.href = loc; a.target = '_blank'; a.rel = 'noopener noreferrer'; body.append(a); }
+  else if (loc) body.append(pt.el('span', 'pt-meta', `📍 ${loc}`));
+  if (r.notes) body.append(pt.el('span', 'pt-meta pt-note', r.notes));
+  if (withDelete) { const by = pt.byline(r); if (by) body.append(by); }
+  li.append(dt, body);
+  const today = pt.today();
+  if (r.date === today) li.append(pt.el('span', 'pt-badge is-soon', 'Today'));
+  if (withDelete) li.append(pt.delBtn('meetings', r.id));
+  return li;
+};
+const upcomingMeetings = () => {
+  const m = dash.data('meetings'); if (m.status !== 'ok') return null;
+  const today = pt.today();
+  return m.data.filter((r) => (r.date || '') >= today).sort((a, b) => `${a.date} ${a.time || ''}`.localeCompare(`${b.date} ${b.time || ''}`));
+};
+dash.draw('meetingList', (el) => {
+  const rows = upcomingMeetings();
+  if (!rows) { el.replaceChildren(pt.el('li', 'pt-empty', '—')); return; }
+  if (!rows.length) { el.replaceChildren(pt.el('li', 'pt-empty', 'No upcoming meetings. Click “＋ Add meeting” above.')); return; }
+  el.replaceChildren(...rows.map((r) => meetingItem(r, true)));
+});
+dash.draw('meetingNext', (el) => {
+  const rows = upcomingMeetings();
+  if (!rows) { el.replaceChildren(pt.el('li', 'pt-empty', '—')); return; }
+  if (!rows.length) { el.replaceChildren(pt.el('li', 'pt-empty', 'No meetings scheduled. Add one in the Tasks tab.')); return; }
+  el.replaceChildren(...rows.slice(0, 5).map((r) => meetingItem(r, false)));
 });

@@ -1,6 +1,6 @@
 (() => {
 const pt = window.pt = {};
-pt.col = {mom: 'data/prch/mom', team: 'data/prch/team', tasks: 'data/prch/tasks', pipeline: 'data/prch/pipeline', collaterals: 'data/prch/collaterals'};
+pt.col = {meetings: 'data/prch/meetings', mom: 'data/prch/mom', team: 'data/prch/team', tasks: 'data/prch/tasks', pipeline: 'data/prch/pipeline', collaterals: 'data/prch/collaterals'};
 pt.iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 pt.today = () => pt.iso(new Date());
 pt.taskFilter = 'open';
@@ -10,9 +10,9 @@ pt.shortDate = (s) => { if (typeof s !== 'string' || s.length < 10) return '—'
 pt.rupiah = (v) => (v === '' || v == null || !isFinite(+v)) ? '—' : new Intl.NumberFormat('en-US', {style: 'currency', currency: 'IDR', maximumFractionDigits: 0}).format(+v);
 pt.rupiahShort = (v) => (v === '' || v == null || !isFinite(+v)) ? '—' : new Intl.NumberFormat('en-US', {style: 'currency', currency: 'IDR', notation: 'compact', maximumFractionDigits: 1}).format(+v);
 pt.TONES = {
-  status: [['Pending', 'pend'], ['To do', 'muted'], ['In progress', 'blue'], ['Review', 'warn'], ['Done', 'ok']],
+  status: [['To do', 'muted'], ['In progress', 'blue'], ['Review', 'warn'], ['Done', 'ok']],
   priority: [['High', 'bad'], ['Medium', 'warn'], ['Low', 'muted']],
-  stage: [['Prospect', 'muted'], ['Pitching', 'blue'], ['Negotiation', 'warn'], ['Deal', 'ok'], ['Lost', 'bad']],
+  stage: [['Pending', 'pend'], ['Prospect', 'muted'], ['Pitching', 'blue'], ['Negotiation', 'warn'], ['Deal', 'ok'], ['Lost', 'bad']],
   collat: [['Draft', 'muted'], ['Review', 'warn'], ['Final', 'ok']],
   contract: [['Main con', 'blue'], ['Subcon', 'warn']],
   engagement: [['Retainer', 'ok'], ['Project based', 'blue']],
@@ -215,7 +215,7 @@ dash.calc('kpi', {
     const today = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
     const sum = (rows) => rows.reduce((s, p) => s + (Number(p.value) || 0), 0);
     const open = tasks.filter((t) => t.status !== 'Done');
-    const active = pipeline.filter((p) => ['Prospect', 'Pitching', 'Negotiation'].includes(p.stage));
+    const active = pipeline.filter((p) => ['Pending', 'Prospect', 'Pitching', 'Negotiation'].includes(p.stage));
     const won = pipeline.filter((p) => p.stage === 'Deal');
     return [{
       openTasks: open.length,
@@ -236,7 +236,7 @@ dash.calc('pipeStages', {
   title: 'Pipeline by stage',
   description: 'Number of clients and total project value at each pipeline stage.',
   inputs: ['pipeline'],
-  fn: (pipeline) => ['Prospect', 'Pitching', 'Negotiation', 'Deal', 'Lost'].map((stage) => {
+  fn: (pipeline) => ['Pending', 'Prospect', 'Pitching', 'Negotiation', 'Deal', 'Lost'].map((stage) => {
     const rows = pipeline.filter((p) => p.stage === stage);
     return {stage, deals: rows.length, value: rows.reduce((s, p) => s + (Number(p.value) || 0), 0)};
   })

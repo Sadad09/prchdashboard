@@ -16,6 +16,7 @@
     pipeline: 'data/prch/pipeline',
     collaterals: 'data/prch/collaterals',
     mom: 'data/prch/mom',
+    meetings: 'data/prch/meetings',
     activity: 'data/prch/activity'
   };
 
@@ -42,7 +43,7 @@
   window.ptWho = who;
 
   const KIND = {'data/prch/tasks': 'task', 'data/prch/team': 'team member', 'data/prch/pipeline': 'prospect',
-    'data/prch/collaterals': 'document', 'data/prch/mom': 'MoM'};
+    'data/prch/collaterals': 'document', 'data/prch/mom': 'MoM', 'data/prch/meetings': 'meeting'};
   const titleOf = (r) => (r && (r.title || r.name || r.client)) || '(untitled)';
   const LABELS = {status: 'status', stage: 'stage', priority: 'priority', owner: 'PIC', pic: 'PIC', deadline: 'deadline',
     value: 'value', engagement: 'engagement', notes: 'notes', contract: 'PRCH role'};
