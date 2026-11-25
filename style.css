@@ -176,3 +176,7 @@
 .pt-sched{display:flex;flex-direction:column;gap:var(--cds-gap-md)}
 .pt-sched .pt-add{background:var(--color-bg)}
 .pt-list .pt-mom-date{width:44px;height:44px;flex:none}
+.pt-gate [data-view]{display:flex;flex-direction:column;gap:10px}
+.pt-gate [data-view][hidden]{display:none}
+.pt-google{padding:12px!important}
+.pt-card[hidden]{display:none}

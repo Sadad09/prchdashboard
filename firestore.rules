@@ -1,0 +1,30 @@
+rules_version = '2';
+// Paste into Firebase console → Firestore Database → Rules, then Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+    function email() { return request.auth.token.email.lower(); }
+    // Core team: keep in sync with `team` in firebase-config.js
+    function isTeam() {
+      return signedIn() && email() in [
+        'SADAD_EMAIL', 'AJI_EMAIL', 'OJI_EMAIL'
+      ];
+    }
+    // Partners: a team member adds access/{email} from Team → Partner access
+    function isPartner() { return signedIn() && exists(/databases/$(database)/documents/access/$(email())); }
+
+    // Tracker data: tasks, pipeline, MoM, meetings, collaterals, team, activity
+    match /data/prch/{col}/{id} {
+      allow read, write: if isTeam() || isPartner();
+    }
+
+    // Partner access list
+    match /access/{em} {
+      allow read: if isTeam() || (signedIn() && em == email());
+      allow create, delete: if isTeam();
+      allow update: if isTeam()
+        || (signedIn() && em == email()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'agency']));
+    }
+  }
+}

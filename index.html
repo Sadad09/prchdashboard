@@ -7,8 +7,8 @@
 <link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@400&display=swap">
-<link rel="stylesheet" href="base.css?v=6">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="base.css?v=7">
+<link rel="stylesheet" href="style.css?v=7">
 <script src="vendor/d3.min.js"></script>
 </head>
 <body>
@@ -33,13 +33,13 @@
 </nav>
 
 <div class='pt-datatools'>
-<span class='pt-whobar'>Logged in as <b id='whoBadge'>—</b> <button type='button' id='whoSwitch'>Switch</button></span>
-<span>Data is saved in this browser.</span>
+<span class='pt-whobar'>Signed in as <b id='whoBadge'>—</b> <button type='button' data-signout>Sign out</button></span>
+<span>Synced live for the whole team.</span>
 <button type='button' id='dataExport'>⬇ Export data</button>
 <label>⬆ Import data<input type='file' id='dataImport' accept='application/json,.json'></label>
 </div>
 
-<p id='unsaved' class='pt-warn' hidden>That change was not saved. Check that your browser allows local storage for this site.</p>
+<p id='unsaved' class='pt-warn' hidden>That change was not saved. Check your connection, or sign in again.</p>
 <datalist id='clientList' data-draw='clientList'></datalist>
 
 <section class='pt-sec' id='ringkasan'>
@@ -167,28 +167,45 @@
 <button class='pt-btn' type='submit'>Save member</button>
 </form></details>
 <div class='pt-team' id='kartu-tim' data-draw='teamCards'></div>
+<div class='pt-card' id='partner-access' data-team-only hidden>
+<h2>🤝 Partner access</h2><p class='pt-sub'>Partners can only open the tracker after you add their Google email here. They enter their name the first time they sign in.</p>
+<form class='pt-form' id='accessForm' style='padding:12px 0'>
+<label>Partner's Google email<input type='email' name='email' required placeholder='name@agency.com'></label>
+<label>Agency<input name='agency' required placeholder='Agency name'></label>
+<button class='pt-btn' type='submit'>Give access</button>
+</form>
+<ul class='pt-list' data-draw='accessList'></ul>
+</div>
 </section>
 </div>
 </div>
 
-<div class='pt-gate' id='whoGate' hidden role='dialog' aria-modal='true' aria-labelledby='whoTitle'>
+<div class='pt-gate' id='whoGate' role='dialog' aria-modal='true' aria-labelledby='whoTitle'>
 <div class='pt-gate-box'>
 <img src='logo.png' alt='Public Relations Clubhouse' style='height:44px;width:auto;align-self:flex-start'>
-<div><h2 id='whoTitle'>Who's using the tracker?</h2><p class='pt-sub'>Your name is shown on every change you make.</p></div>
-<div class='pt-gate-team'><button type='button' data-who='Aji'>Aji</button><button type='button' data-who='Mas Oji'>Mas Oji</button><button type='button' data-who='Sadad'>Sadad</button></div>
-<div class='pt-gate-or'>or, for partners</div>
+<div><h2 id='whoTitle'>PRCH Team Tracker</h2><p class='pt-sub' id='gateMsg'></p></div>
+<div data-view='busy'><p class='pt-sub'>Loading…</p></div>
+<div data-view='signin' hidden><p class='pt-sub'>Sign in with your Google account. PRCH team members and invited partners only.</p><button type='button' class='pt-btn pt-google' id='gateSignIn'>Sign in with Google</button></div>
+<div data-view='partner' hidden>
+<p class='pt-sub'>Welcome! Tell us who you are. Your name is shown on every change you make.</p>
 <form id='whoPartner'>
 <input name='agency' required placeholder='Agency name' aria-label='Agency name'>
 <input name='name' required placeholder='Your name' aria-label='Your name'>
-<button class='pt-btn' type='submit'>Continue as partner</button>
+<button class='pt-btn' type='submit'>Continue</button>
 </form>
+<button type='button' class='pt-linkbtn' data-signout>Use another account</button>
+</div>
+<div data-view='denied' hidden><button type='button' class='pt-btn' data-signout>Sign in with another account</button></div>
+<div data-view='error' hidden><button type='button' class='pt-btn' onclick='location.reload()'>Reload</button></div>
 </div>
 </div>
-<script src="dash-shim.js?v=6"></script>
-<script src="core.js?v=6"></script>
-<script src="draw.js?v=6"></script>
-<script src="mom.js?v=6"></script>
-<script src="ui.js?v=6"></script>
+<script src="firebase-config.js?v=7"></script>
+<script type="module" src="fb.js?v=7"></script>
+<script src="dash-shim.js?v=7"></script>
+<script src="core.js?v=7"></script>
+<script src="draw.js?v=7"></script>
+<script src="mom.js?v=7"></script>
+<script src="ui.js?v=7"></script>
 <script>dash.__start();</script>
 </body>
 </html>

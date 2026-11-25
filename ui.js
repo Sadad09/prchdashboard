@@ -44,7 +44,7 @@ const saveMom = async (row) => {
   });
 };
 
-document.querySelectorAll('.pt-form').forEach((f) => f.addEventListener('submit', async (ev) => {
+document.querySelectorAll('.pt-form[data-col]').forEach((f) => f.addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const k = f.dataset.col; const row = {};
   new FormData(f).forEach((v, key) => { row[key] = typeof v === 'string' ? v.trim() : v; });
