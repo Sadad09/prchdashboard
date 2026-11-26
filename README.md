@@ -1,6 +1,9 @@
 # PRCH Team Tracker
 
-Internal tracker for the PR Clubhouse team: tasks, minutes of meeting (MoM), client pipeline, collaterals and team members, with an overview dashboard.
+Internal trackers for PR Clubhouse, with two workspaces chosen after sign-in:
+
+- **Agency** (`index.html`): tasks, schedule, minutes of meeting (MoM), client pipeline, collaterals, team.
+- **Community** (`community.html`): events, sponsors & partners, media coverage, tasks, schedule, team.
 
 It is a plain static website (HTML, CSS, JavaScript). No build step and no server needed.
 
@@ -43,7 +46,8 @@ Data is stored in **Firebase Firestore** (project `prchdashboard`) and syncs liv
 
 | File | What it does |
 | --- | --- |
-| `index.html` | Page layout, tabs and forms |
+| `index.html` | Agency workspace page |
+| `community.html` | Community workspace page |
 | `base.css` | Theme colours, fonts, light/dark mode |
 | `style.css` | Tracker styles |
 | `firebase-config.js` | Firebase project config and admin email |
@@ -54,6 +58,7 @@ Data is stored in **Firebase Firestore** (project `prchdashboard`) and syncs liv
 | `core.js` | Shared helpers, tables, boards, charts, KPI calculations |
 | `draw.js` | Draws each section (KPIs, charts, boards, tables, team cards) |
 | `mom.js` | Minutes of Meeting list and Word (.docx) export |
+| `community.js` | Community workspace: events, sponsors & partners, coverage |
 | `ui.js` | Tabs, view toggles and form handling |
 | `vendor/d3.min.js` | D3 v7 charting library (ISC licence, see `vendor/d3-LICENSE`) |
 | `logo.png` | PR Clubhouse logo |

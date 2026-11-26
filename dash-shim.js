@@ -9,7 +9,18 @@
 (() => {
   const CFG = window.PRCH_CONFIG || {firebase: {}, team: {}};
   const OWNER = String(CFG.admin || '').toLowerCase();
-  const DATASETS = {
+  // Which tracker this page is: 'agency' (index.html) or 'community' (community.html)
+  const WS = window.PRCH_WS === 'community' ? 'community' : 'agency';
+  const WS_PAGES = {agency: 'index.html', community: 'community.html'};
+  const DATASETS = WS === 'community' ? {
+    events: 'data/prch/c_events',
+    sponsors: 'data/prch/c_sponsors',
+    coverage: 'data/prch/c_coverage',
+    tasks: 'data/prch/c_tasks',
+    team: 'data/prch/c_team',
+    meetings: 'data/prch/c_meetings',
+    activity: 'data/prch/c_activity'
+  } : {
     tasks: 'data/prch/tasks',
     team: 'data/prch/team',
     pipeline: 'data/prch/pipeline',
@@ -53,7 +64,9 @@
 
   // ---------- change stamps + activity log ----------
   const KIND = {'data/prch/tasks': 'task', 'data/prch/team': 'team member', 'data/prch/pipeline': 'prospect',
-    'data/prch/collaterals': 'document', 'data/prch/mom': 'MoM', 'data/prch/meetings': 'meeting'};
+    'data/prch/collaterals': 'document', 'data/prch/mom': 'MoM', 'data/prch/meetings': 'meeting',
+    'data/prch/c_events': 'event', 'data/prch/c_sponsors': 'sponsor/partner', 'data/prch/c_coverage': 'coverage',
+    'data/prch/c_tasks': 'task', 'data/prch/c_team': 'team member', 'data/prch/c_meetings': 'meeting'};
   const titleOf = (r) => (r && (r.title || r.name || r.client)) || '(untitled)';
   const LABELS = {status: 'status', stage: 'stage', priority: 'priority', owner: 'PIC', pic: 'PIC', deadline: 'deadline',
     value: 'value', engagement: 'engagement', notes: 'notes', contract: 'PRCH role'};
@@ -281,7 +294,25 @@
       } catch (e) { gate('error', `Could not check your access: ${errText(e)}`); }
     });
   }
-  function enter() { gate('none'); showBadge(); startSync(); changed(); }
+  // after sign-in: pick Agency or Community once per browser tab
+  const PICK_KEY = 'prch-ws-picked';
+  const picked = () => { try { return sessionStorage.getItem(PICK_KEY); } catch (e) { return WS; } };
+  const setPicked = (v) => { try { if (v) sessionStorage.setItem(PICK_KEY, v); else sessionStorage.removeItem(PICK_KEY); } catch (e) { /* ignore */ } };
+  document.querySelectorAll('[data-ws]').forEach((b) => b.addEventListener('click', () => {
+    const w = b.dataset.ws; setPicked(w);
+    if (w === WS) { if (me) { gate('none'); showBadge(); startSync(); changed(); } }
+    else location.href = WS_PAGES[w] + (location.hash && w === WS ? location.hash : '');
+  }));
+  document.querySelectorAll('[data-signout]').forEach((b) => b.addEventListener('click', () => setPicked(null)));
+  function enter() {
+    showBadge();
+    if (!picked()) {
+      const hi = $('wsHello'); if (hi) hi.textContent = `Hi ${String(me.name || '').split(' ')[0] || 'there'}, which tracker do you want to open?`;
+      gate('workspace'); return;
+    }
+    if (picked() !== WS) { location.href = WS_PAGES[picked()]; return; }
+    gate('none'); startSync(); changed();
+  }
 
   // ---------- admin: requests + members ----------
   const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };

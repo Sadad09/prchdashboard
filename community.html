@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRCH Community Tracker</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@400&display=swap">
+<link rel="stylesheet" href="base.css?v=11">
+<link rel="stylesheet" href="style.css?v=11">
+<script src="vendor/d3.min.js"></script>
+</head>
+<body>
+<div id="dash-root">
+<div class='pt pt-app' id='prch-tracker'>
+<aside class='pt-side'>
+<div class='pt-side-brand'><img class='pt-logo' src='logo.png' alt='Public Relations Clubhouse — Connect · Growth' width='159' height='70'></div>
+<div class='pt-ws-switch' role='group' aria-label='Workspace'><button type='button' data-ws='agency' aria-pressed='false'>Agency</button><button type='button' data-ws='community' aria-pressed='true'>Community</button></div>
+<p class='pt-side-label'>Community workspace</p>
+<nav class='pt-tabs' role='tablist' aria-label='Tracker sections' aria-orientation='vertical'>
+<button type='button' class='pt-tab' role='tab' data-tab='ringkasan' aria-selected='true'><svg class='pt-ic' viewBox='0 0 24 24' aria-hidden='true'><path d='M3 11.5 12 4l9 7.5M5.5 10v9.5h5v-6h3v6h5V10'/></svg><span class='pt-tab-lab'>Overview</span></button>
+<button type='button' class='pt-tab' role='tab' data-tab='events' aria-selected='false'><svg class='pt-ic' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h3'/></svg><span class='pt-tab-lab'>Events</span><span class='pt-count' data-draw='ckpi' data-field='eventsActive'>—</span></button>
+<button type='button' class='pt-tab' role='tab' data-tab='task' aria-selected='false'><svg class='pt-ic' viewBox='0 0 24 24' aria-hidden='true'><path d='M9 11l2.5 2.5L16 9M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/></svg><span class='pt-tab-lab'>Tasks</span><span class='pt-count' data-draw='ckpi' data-field='openTasks'>—</span></button>
+<button type='button' class='pt-tab' role='tab' data-tab='sponsors' aria-selected='false'><svg class='pt-ic' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z'/></svg><span class='pt-tab-lab'>Sponsors &amp; partners</span><span class='pt-count' data-draw='ckpi' data-field='sponsorsActive'>—</span></button>
+<button type='button' class='pt-tab' role='tab' data-tab='coverage' aria-selected='false'><svg class='pt-ic' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 5h12v14H6a2 2 0 0 1-2-2zM16 9h4v8a2 2 0 0 1-2 2M7 9h6M7 13h6'/></svg><span class='pt-tab-lab'>Coverage</span><span class='pt-count' data-draw='ckpi' data-field='coverageCount'>—</span></button>
+<button type='button' class='pt-tab' role='tab' data-tab='tim' aria-selected='false'><svg class='pt-ic' viewBox='0 0 24 24' aria-hidden='true'><path d='M16 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 17.5V19M10 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6M20 19v-1.5a3.5 3.5 0 0 0-2.5-3.35M15.5 5.2a3 3 0 0 1 0 5.6'/></svg><span class='pt-tab-lab'>Team</span><span class='pt-count' data-draw='ckpi' data-field='teamCount'>—</span></button>
+</nav>
+<div class='pt-side-foot'>
+<div class='pt-me'><span class='pt-me-av' id='whoAvatar' aria-hidden='true'>•</span><div class='pt-me-info'><b id='whoBadge'>—</b><span class='pt-me-sub'>Synced live</span></div><button type='button' class='pt-me-out' data-signout title='Sign out' aria-label='Sign out'><svg class='pt-ic' viewBox='0 0 24 24' aria-hidden='true'><path d='M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10'/></svg></button></div>
+<div class='pt-datatools'><button type='button' id='dataExport'>Export</button><label>Import<input type='file' id='dataImport' accept='application/json,.json'></label></div>
+</div>
+</aside>
+<main class='pt-main'>
+<header class='pt-hero' id='hero'>
+<p class='pt-hero-date' data-draw='todayLabel'>—</p>
+<h1 class='pt-title' data-draw='greet'>Hello</h1>
+<p class='pt-lede' id='lede'><span class='pt-strong' data-draw='ckpi' data-field='upcoming'>—</span> upcoming events. Next up: <span class='pt-strong' data-draw='ckpi' data-field='nextLabel'>—</span>. Sponsorship confirmed: <span class='pt-strong' data-draw='ckpi' data-fmt='rp' data-field='sponsorValue'>—</span>.</p>
+</header>
+
+<p id='unsaved' class='pt-warn' hidden>That change was not saved. Check your connection, or sign in again.</p>
+<datalist id='clientList' data-draw='clientList'></datalist>
+
+<section class='pt-sec' id='ringkasan'>
+<div class='pt-kpis'>
+<div class='pt-card pt-kpi' id='k-up' style='--pt-accent:var(--pt-c1)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>🎪</span><span class='pt-kpi-label'>Upcoming events</span></div><div class='pt-kpi-val' data-draw='ckpi' data-field='upcoming'>—</div><div class='pt-kpi-sub'>Next: <span data-draw='ckpi' data-field='nextLabel'>—</span></div></div>
+<div class='pt-card pt-kpi' id='k-att' style='--pt-accent:var(--color-ok)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>👥</span><span class='pt-kpi-label'>Attendees this year</span></div><div class='pt-kpi-val' data-draw='ckpi' data-field='attendees'>—</div><div class='pt-kpi-sub'>From <span data-draw='ckpi' data-field='eventsDone'>—</span> events marked Done</div></div>
+<div class='pt-card pt-kpi' id='k-spon' style='--pt-accent:var(--pt-c2)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>🤝</span><span class='pt-kpi-label'>Sponsorship confirmed</span></div><div class='pt-kpi-val' data-draw='ckpi' data-fmt='rp' data-field='sponsorValue'>—</div><div class='pt-kpi-sub'><span data-draw='ckpi' data-field='sponsorsConfirmed'>—</span> sponsors &amp; partners confirmed</div></div>
+<div class='pt-card pt-kpi' id='k-task' style='--pt-accent:var(--color-warn)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>📋</span><span class='pt-kpi-label'>Open tasks</span></div><div class='pt-kpi-val' data-draw='ckpi' data-field='openTasks'>—</div><div class='pt-kpi-sub'><span data-draw='ckpi' data-field='overdue'>—</span> overdue</div></div>
+<div class='pt-card pt-kpi' id='k-cov' style='--pt-accent:var(--pt-c5)'><div class='pt-kpi-top'><span class='pt-ico' aria-hidden='true'>📰</span><span class='pt-kpi-label'>Media coverage</span></div><div class='pt-kpi-val' data-draw='ckpi' data-field='coverageCount'>—</div><div class='pt-kpi-sub'>Articles &amp; posts logged</div></div>
+</div>
+<div class='pt-grid2'>
+<div class='pt-card' id='next-events'><h2>Upcoming events</h2><p class='pt-sub'>What's coming up, nearest first.</p><ul class='pt-list' data-draw='eventNext'></ul></div>
+<div class='pt-card' id='meetings-next'><h2>Upcoming meetings</h2><p class='pt-sub'>The next meetings on the schedule.</p><ul class='pt-list' data-draw='meetingNext'></ul></div>
+<div class='pt-card' id='deadline'><h2>Upcoming deadlines</h2><p class='pt-sub'>Open tasks that are overdue or due within 7 days.</p><ul class='pt-list' data-draw='upcoming'></ul></div>
+</div>
+<div class='pt-grid2'>
+<div class='pt-card' id='event-stages'><h2>Events by status</h2><p class='pt-sub'>From idea to done.</p><div class='pt-chart' data-draw='eventChart'></div></div>
+<div class='pt-card' id='workload'><h2>Team workload</h2><p class='pt-sub'>Open tasks per person. The red part is overdue.</p><div class='pt-chart' data-draw='workloadChart'></div></div>
+</div>
+<div class='pt-card' id='recent'><h2>Recent changes</h2><p class='pt-sub'>Who added, edited or deleted what, newest first.</p><ul class='pt-list' data-draw='activity'></ul></div>
+</section>
+
+<section class='pt-sec' id='events' hidden>
+<div class='pt-sec-head'><div><h2>Events</h2><p class='pt-sub'>Every community event from idea to done. Drag cards to change status.</p></div><div class='pt-seg' role='group' aria-label='View'><button type='button' class='pt-segbtn' data-for='events' data-view='board' aria-pressed='true'>Board</button><button type='button' class='pt-segbtn' data-for='events' data-view='table' aria-pressed='false'>Table</button></div></div>
+<details class='pt-add' id='add-event'><summary>＋ Add event</summary>
+<form class='pt-form' data-col='events'>
+<label>Event name<input name='name' required placeholder='e.g. PRCH Meetup vol. 3'></label>
+<label>Date<input type='date' name='date'></label>
+<label>Time<input type='time' name='time'></label>
+<label>Venue<input name='venue' placeholder='Venue or online link'></label>
+<label>Format<select name='format' class='dash-select'><option>Offline</option><option>Online</option><option>Hybrid</option></select></label>
+<label>Status<select name='status' class='dash-select'><option>Idea</option><option selected>Planning</option><option>Confirmed</option><option>Done</option><option>Cancelled</option></select></label>
+<label>Target attendees<input type='number' name='target' min='0' placeholder='0'></label>
+<label>Actual attendees<input type='number' name='actual' min='0' placeholder='Fill in after the event'></label>
+<label>Budget (IDR)<input type='number' name='budget' min='0' step='1000' placeholder='0'></label>
+<label>PIC<select name='pic' class='dash-select' data-draw='ownerSelect'></select></label>
+<label class='pt-wide'>Theme / notes<input name='notes' placeholder='Theme, speakers, key messages'></label>
+<label class='pt-wide'>Recap link<input type='url' name='recap' placeholder='Recap video, photos or report (optional)'></label>
+<button class='pt-btn' type='submit'>Save event</button>
+</form></details>
+<div class='pt-view' data-of='events' data-view='board'><div class='pt-board' id='board-events' data-draw='eventBoard'></div></div>
+<div class='pt-view' data-of='events' data-view='table' hidden>
+<div class='pt-tablewrap'><table class='pt-table' id='tabel-events'><thead><tr><th>Event</th><th>Date</th><th>Status</th><th>Format</th><th>Venue</th><th>Attendees</th><th>Budget</th><th>PIC</th><th>Recap</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='eventBody'></tbody></table></div>
+</div>
+</section>
+
+<section class='pt-sec' id='task' hidden>
+<div class='pt-sec-head'><div><h2>Team tasks</h2><p class='pt-sub'>Drag cards between columns to change status, or use the arrow buttons on each card.</p></div>
+<div class='pt-seg' role='group' aria-label='Task view'><button type='button' class='pt-segbtn' data-for='task' data-view='board' aria-pressed='true'>Board</button><button type='button' class='pt-segbtn' data-for='task' data-view='table' aria-pressed='false'>Table</button></div></div>
+<div class='pt-card pt-sched' id='schedule'>
+<div class='pt-sec-head'><div><h2>📅 Schedule</h2><p class='pt-sub'>Meetings with venues, sponsors, speakers and the team.</p></div></div>
+<details class='pt-add' id='add-meeting'><summary>＋ Add meeting</summary>
+<form class='pt-form' data-col='meetings'>
+<label>Meeting<input name='title' required placeholder='e.g. Venue survey'></label>
+<label>Event<input name='client' list='clientList' placeholder='Event name'></label>
+<label>Date<input type='date' name='date' required></label>
+<label>Time<input type='time' name='time'></label>
+<label>Location / link<input name='location' placeholder='Office, cafe, or Zoom/Meet link'></label>
+<label>PIC<select name='owner' class='dash-select' data-draw='ownerSelect'></select></label>
+<label class='pt-wide'>Attendees / agenda<input name='notes' placeholder='Who joins and what to prepare'></label>
+<button class='pt-btn' type='submit'>Save meeting</button>
+</form></details>
+<ul class='pt-list' data-draw='meetingList'></ul>
+</div>
+<details class='pt-add' id='add-task'><summary>＋ Add task</summary>
+<form class='pt-form' data-col='tasks'>
+<label>Task name<input name='title' required placeholder='e.g. Book venue for Meetup vol. 3'></label>
+<label>Event<input name='client' list='clientList' placeholder='Event name'></label>
+<label>PIC<select name='owner' class='dash-select' data-draw='ownerSelect'></select></label>
+<label>Deadline<input type='date' name='deadline'></label>
+<label>Priority<select name='priority' class='dash-select'><option>High</option><option selected>Medium</option><option>Low</option></select></label>
+<label>Status<select name='status' class='dash-select'><option>To do</option><option>In progress</option><option>Review</option><option>Done</option></select></label>
+<button class='pt-btn' type='submit'>Save task</button>
+</form></details>
+<div class='pt-view' data-of='task' data-view='board'><div class='pt-board' id='board-task' data-draw='taskBoard'></div></div>
+<div class='pt-view' data-of='task' data-view='table' hidden>
+<div class='pt-toolbar'><select class='dash-select' id='taskFilter' aria-label='Filter tasks'><option value='open'>Open</option><option value='all'>All tasks</option><option value='done'>Done</option></select></div>
+<div class='pt-tablewrap'><table class='pt-table' id='tabel-task'><thead><tr><th>Task</th><th>Event</th><th>PIC</th><th>Deadline</th><th>Priority</th><th>Status</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='tasksBody'></tbody></table></div>
+</div>
+</section>
+<section class='pt-sec' id='sponsors' hidden>
+<div class='pt-sec-head'><div><h2>Sponsors &amp; partners</h2><p class='pt-sub'>Sponsors, media partners, community partners, venues and speakers for each event.</p></div><div class='pt-seg' role='group' aria-label='View'><button type='button' class='pt-segbtn' data-for='sponsors' data-view='board' aria-pressed='true'>Board</button><button type='button' class='pt-segbtn' data-for='sponsors' data-view='table' aria-pressed='false'>Table</button></div></div>
+<details class='pt-add' id='add-sponsor'><summary>＋ Add sponsor / partner</summary>
+<form class='pt-form' data-col='sponsors'>
+<label>Name<input name='name' required placeholder='Brand, media or community name'></label>
+<label>Type<select name='type' class='dash-select'><option>Sponsor</option><option>Media partner</option><option>Community partner</option><option>Venue</option><option>Speaker</option></select></label>
+<label>Event<input name='event' list='clientList' placeholder='Event name'></label>
+<label>Stage<select name='stage' class='dash-select'><option>Prospect</option><option>Pitching</option><option>Negotiation</option><option>Confirmed</option><option>Declined</option></select></label>
+<label>Value (IDR, cash or in-kind)<input type='number' name='value' min='0' step='1000' placeholder='0'></label>
+<label>Contact person<input name='contact' placeholder='Name / phone / email'></label>
+<label>PIC<select name='pic' class='dash-select' data-draw='ownerSelect'></select></label>
+<label class='pt-wide'>Benefits / notes<input name='notes' placeholder='e.g. logo on backdrop, 2 booth slots, 1 speaking slot'></label>
+<button class='pt-btn' type='submit'>Save</button>
+</form></details>
+<div class='pt-view' data-of='sponsors' data-view='board'><div class='pt-board' id='board-sponsors' data-draw='sponsorBoard'></div></div>
+<div class='pt-view' data-of='sponsors' data-view='table' hidden>
+<div class='pt-tablewrap'><table class='pt-table' id='tabel-sponsors'><thead><tr><th>Name</th><th>Type</th><th>Event</th><th>Stage</th><th>Value</th><th>Contact</th><th>PIC</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='sponsorBody'></tbody></table></div>
+</div>
+</section>
+
+<section class='pt-sec' id='coverage' hidden>
+<div class='pt-sec-head'><div><h2>Coverage &amp; recap</h2><p class='pt-sub'>Media articles and social posts about each event.</p></div></div>
+<details class='pt-add' id='add-coverage'><summary>＋ Add coverage</summary>
+<form class='pt-form' data-col='coverage'>
+<label>Headline / title<input name='title' required placeholder='Article or post title'></label>
+<label>Event<input name='event' list='clientList' placeholder='Event name'></label>
+<label>Media / account<input name='media' placeholder='e.g. Kompas.com, @prch.id'></label>
+<label>Channel<select name='channel' class='dash-select'><option>Online media</option><option>Print</option><option>TV</option><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Other</option></select></label>
+<label>Date<input type='date' name='date'></label>
+<label>Sentiment<select name='sentiment' class='dash-select'><option>Positif</option><option>Netral</option><option>Negatif</option></select></label>
+<label class='pt-wide'>Link<input type='url' name='link' placeholder='https://'></label>
+<button class='pt-btn' type='submit'>Save coverage</button>
+</form></details>
+<div class='pt-tablewrap'><table class='pt-table' id='tabel-coverage'><thead><tr><th>Title</th><th>Event</th><th>Media</th><th>Channel</th><th>Date</th><th>Sentiment</th><th>Link</th><th><span class='pt-meta'>Actions</span></th></tr></thead><tbody data-draw='coverageBody'></tbody></table></div>
+</section>
+
+<section class='pt-sec' id='tim' hidden>
+<div class='pt-sec-head'><div><h2>Team members</h2><p class='pt-sub'>Names here appear as PIC options in the other tabs.</p></div></div>
+<details class='pt-add' id='add-tim'><summary>＋ Add member</summary>
+<form class='pt-form' data-col='team'>
+<label>Name<input name='name' required placeholder='Member name'></label>
+<label>Role<input name='role' placeholder='e.g. Event lead, Volunteer'></label>
+<button class='pt-btn' type='submit'>Save member</button>
+</form></details>
+<div class='pt-team' id='kartu-tim' data-draw='teamCards'></div>
+<div class='pt-card pt-admin' id='access' data-admin-only hidden>
+<h2>🔐 Access &amp; members</h2><p class='pt-sub'>Only you (admin) can see this. People who sign in without access can send a request; accept or reject it here, or add someone directly.</p>
+<h3 class='pt-h3'>Pending requests</h3>
+<ul class='pt-list' data-draw='requestList'></ul>
+<h3 class='pt-h3'>Add member</h3>
+<form class='pt-form' id='memberForm' style='padding:0'>
+<label>Google email<input type='email' name='email' required placeholder='name@gmail.com'></label>
+<label>Role<select name='role' class='dash-select'><option value='team'>PRCH team</option><option value='partner'>Partner</option><option value='admin'>Admin</option></select></label>
+<label>Name<input name='name' placeholder='Optional; they can fill it in'></label>
+<label data-agency>Agency<input name='agency' placeholder='Partner agency'></label>
+<button class='pt-btn' type='submit'>Add member</button>
+</form>
+<h3 class='pt-h3'>Members</h3>
+<ul class='pt-list' data-draw='memberList'></ul>
+</div>
+</section>
+</main>
+</div>
+</div>
+
+<div class='pt-gate' id='whoGate' role='dialog' aria-modal='true' aria-labelledby='whoTitle'>
+<div class='pt-gate-box'>
+<img src='logo.png' alt='Public Relations Clubhouse' style='height:44px;width:auto;align-self:flex-start'>
+<div><h2 id='whoTitle'>PRCH Team Tracker</h2><p class='pt-sub' id='gateMsg'></p></div>
+<div data-view='busy'><p class='pt-sub'>Loading…</p></div>
+<div data-view='signin' hidden><p class='pt-sub'>Sign in with your Google account. PRCH team members and invited partners only.</p><button type='button' class='pt-btn pt-google' id='gateSignIn'>Sign in with Google</button></div>
+<div data-view='profile' hidden>
+<form id='whoProfile'>
+<input name='name' required placeholder='Your name' aria-label='Your name'>
+<div data-agency hidden><input name='agency' placeholder='Agency name' aria-label='Agency name' style='width:100%'></div>
+<button class='pt-btn' type='submit'>Continue</button>
+</form>
+<button type='button' class='pt-linkbtn' data-signout>Use another account</button>
+</div>
+<div data-view='request' hidden>
+<form id='whoRequest'>
+<label class='pt-sub'>I am<select name='role' class='dash-select' style='width:100%;margin-top:4px'><option value='team'>PRCH team member</option><option value='partner'>Partner from another agency</option></select></label>
+<input name='name' required placeholder='Your name' aria-label='Your name'>
+<div data-agency hidden><input name='agency' placeholder='Agency name' aria-label='Agency name' style='width:100%'></div>
+<button class='pt-btn' type='submit'>Request access</button>
+</form>
+<button type='button' class='pt-linkbtn' data-signout>Use another account</button>
+</div>
+<div data-view='workspace' hidden>
+<p class='pt-sub' id='wsHello'>Which tracker do you want to open?</p>
+<div class='pt-ws-pick'>
+<button type='button' class='pt-ws-card' data-ws='agency'><span class='pt-ws-ic'>💼</span><b>PRCH Agency</b><span class='pt-meta'>Clients, pipeline, tasks, MoM, collaterals</span></button>
+<button type='button' class='pt-ws-card' data-ws='community'><span class='pt-ws-ic'>🎪</span><b>PRCH Community</b><span class='pt-meta'>Events, sponsors &amp; partners, coverage</span></button>
+</div>
+<button type='button' class='pt-linkbtn' data-signout>Use another account</button>
+</div>
+<div data-view='pending' hidden><button type='button' class='pt-btn' onclick='location.reload()'>Check again</button><button type='button' class='pt-linkbtn' data-signout>Use another account</button></div>
+<div data-view='denied' hidden><button type='button' class='pt-btn' data-signout>Sign in with another account</button></div>
+<div data-view='error' hidden><button type='button' class='pt-btn' onclick='location.reload()'>Reload</button></div>
+</div>
+</div>
+<script>window.PRCH_WS = 'community';</script>
+<script src="firebase-config.js?v=11"></script>
+<script type="module" src="fb.js?v=11"></script>
+<script src="dash-shim.js?v=11"></script>
+<script src="core.js?v=11"></script>
+<script src="draw.js?v=11"></script>
+<script src="community.js?v=11"></script>
+<script src="ui.js?v=11"></script>
+<script>dash.__start();</script>
+</body>
+</html>

@@ -245,3 +245,18 @@
 .pt-file{display:inline-block;max-width:260px;padding:3px 10px;border-radius:8px;background:color-mix(in srgb,var(--pt-c1) 10%,transparent);text-decoration:none;font-size:var(--cds-font-size-caption);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pt-file:hover{background:color-mix(in srgb,var(--pt-c1) 18%,transparent)}
 .pt-form input[type=file]{padding:6px}
+
+/* workspace picker */
+.pt-ws-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pt-ws-card{font:inherit;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:14px;border:1px solid var(--color-border-line);background:var(--color-panel);color:var(--color-fg);transition:border-color .15s,transform .15s,box-shadow .15s}
+.pt-ws-card:hover{border-color:#2F5BEA;transform:translateY(-2px);box-shadow:0 8px 20px rgba(47,91,234,.15)}
+.pt-ws-card b{font-size:15px}
+.pt-ws-ic{font-size:24px}
+.pt-ws-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:0 2px 10px;border-radius:12px;background:rgba(255,255,255,.06)}
+.pt-ws-switch button{font:inherit;font-size:12px;font-weight:600;cursor:pointer;border:0;border-radius:9px;padding:7px 8px;background:none;color:#8C99C4}
+.pt-ws-switch button[aria-pressed=true]{background:#fff;color:#0B1638}
+.pt-ws-switch button:hover:not([aria-pressed=true]){color:#fff}
+@media (max-width:900px){.pt-ws-switch{margin:0;flex:none}.pt-ws-switch button{padding:6px}}
+@media (max-width:480px){.pt-ws-pick{grid-template-columns:1fr}}
+.pt-nowrap{white-space:nowrap}
+.pt-app .pt-board{grid-auto-columns:minmax(200px,1fr)}
